@@ -15,9 +15,6 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4.1.7
 
-      - name: TODO REMOVE test script
-        run: ./.github/scripts/test.sh "/usr/share/nginx/html"
-
       - name: validation
         uses: gradle/wrapper-validation-action@v2.1.1
 
