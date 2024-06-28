@@ -65,4 +65,4 @@ jobs:
         with:
           start: ./gradlew scripting-host:run --args="$RUNNER_TEMP/kss.sock"
           wait-on: sleep 2
-          command: ./.github/scripts/test.sh "${{ steps.nginx.outputs.html-dir }}"
+          command: ./.github/scripts/test.sh "${{ steps.start_ngingx.outputs.html-dir }}"
