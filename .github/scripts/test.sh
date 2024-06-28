@@ -4,6 +4,7 @@ set -eu
 set -o pipefail
 
 html_dir="$1"
+
 for file in scripting-host/src/test/resources/*.server.kts; do
   cp "$file" "$html_dir"
   test_file_name=$(basename "$file")
