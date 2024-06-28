@@ -51,7 +51,7 @@ jobs:
                   root html;
                   try_files $1.server.kts =404;
                   include fastcgi_params;
-                  fastcgi_pass unix:${{env.RUNNER_TEMP}}/kss.sock;
+                  fastcgi_pass unix:$RUNNER_TEMP/kss.sock;
                 }
                 error_page 500 502 503 504 /50x.html;
                 location = /50x.html {
@@ -63,8 +63,8 @@ jobs:
       - name: Start scripting host
         uses: JarvusInnovations/background-action@v1.0.7
         with:
-          run: ./gradlew scripting-host:run --args="${{env.RUNNER_TEMP}}/kss.sock"
-          wait-on: socket:${{env.RUNNER_TEMP}}/kss.sock
+          run: ./gradlew scripting-host:run --args="$RUNNER_TEMP/kss.sock"
+          wait-on: socket:$RUNNER_TEMP/kss.sock
 
       - name: Run tests on nginx server
         run: ./.github/scripts/test.sh "${{ steps.nginx.outputs.html-dir }}"
