@@ -1,0 +1,70 @@
+name: Develop
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4.1.7
+
+      - name: validation
+        uses: gradle/wrapper-validation-action@v2.1.1
+
+      - name: set up JDK
+        uses: actions/setup-java@v4.1.0
+        with:
+          distribution: 'adopt'
+          java-version: 17
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Start nginx
+        uses: nyurik/action-setup-nginx@v1.1
+        id: start_ngingx
+        with:
+          conf-file-text: |
+            worker_processes 1;
+            events {
+              worker_connections 1024;
+            }
+            http {
+              include mime.types;
+              default_type application/octet-stream;
+              sendfile on;
+              keepalive_timeout 65;
+              server {
+                listen 8080;
+                server_name localhost;
+                location / {
+                  root html;
+                  index index.html index.htm;
+                }
+                location ~ ^(.*)\.kts(\?.*)?$ {
+                  root html;
+                  try_files $1.server.kts =404;
+                  include fastcgi_params;
+                  fastcgi_pass unix:${{env.RUNNER_TEMP}}/kss.sock;
+                }
+                error_page 500 502 503 504 /50x.html;
+                location = /50x.html {
+                  root html;
+                }
+              }
+            }
+
+      - name: Start scripting host
+        uses: JarvusInnovations/background-action@v1.0.7
+        with:
+          run: ./gradlew scripting-host:run --args="${{env.RUNNER_TEMP}}/kss.sock"
+          wait-on: socket:${{env.RUNNER_TEMP}}/kss.sock
+
+      - name: Run tests on nginx server
+        run: ./.github/scripts/test.sh "${{ steps.nginx.outputs.html-dir }}"
