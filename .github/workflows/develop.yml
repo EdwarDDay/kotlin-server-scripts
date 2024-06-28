@@ -60,11 +60,9 @@ jobs:
               }
             }
 
-      - name: Start scripting host
-        uses: JarvusInnovations/background-action@v1.0.7
+      - name: Run tests on nginx
+        uses: BerniWittmann/background-server-action@v1.1.1
         with:
-          run: ./gradlew scripting-host:run --args="$RUNNER_TEMP/kss.sock"
-          wait-on: socket:$RUNNER_TEMP/kss.sock
-
-      - name: Run tests on nginx server
-        run: ./.github/scripts/test.sh "${{ steps.nginx.outputs.html-dir }}"
+          start: ./gradlew scripting-host:run --args="$RUNNER_TEMP/kss.sock"
+          wait-on: sleep 2
+          command: ./.github/scripts/test.sh "${{ steps.nginx.outputs.html-dir }}"
