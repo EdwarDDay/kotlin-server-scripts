@@ -14,6 +14,9 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4.1.7
 
+      - name: TODO REMOVE test script
+        run: ./.github/scripts/test.sh "/usr/share/nginx/html"
+
       - name: validation
         uses: gradle/wrapper-validation-action@v2.1.1
 
@@ -64,5 +67,5 @@ jobs:
         uses: BerniWittmann/background-server-action@v1.1.1
         with:
           start: ./gradlew scripting-host:run --args="$RUNNER_TEMP/kss.sock"
-          wait-on: sleep 2
+          wait-on: sleep 5
           command: ./.github/scripts/test.sh "${{ steps.start_ngingx.outputs.html-dir }}"

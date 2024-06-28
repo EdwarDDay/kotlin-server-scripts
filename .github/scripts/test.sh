@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/bash
 
-set -eu
+set -eux
 set -o pipefail
 
 html_dir="$1"
