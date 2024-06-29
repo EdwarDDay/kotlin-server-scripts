@@ -46,7 +46,7 @@ jobs:
                 server_name localhost;
                 location ~ ^(.*)\.kts(\?.*)?$ {
                   root html;
-                  try_files $1.server.kts =404;
+                  try_files \$1.server.kts =404;
                   include fastcgi_params;
                   fastcgi_pass unix:$RUNNER_TEMP/kss.sock;
                 }
@@ -71,3 +71,7 @@ jobs:
       - name: Print html directory content
         if: ${{ failure() }}
         run: ls -lisa "${{ steps.start_ngingx.outputs.html-dir }}"
+
+      - name: Print temporary directory content
+        if: ${{ failure() }}
+        run: ls -lisa "$RUNNER_TEMP"
