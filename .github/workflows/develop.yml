@@ -44,19 +44,11 @@ jobs:
               server {
                 listen 8080;
                 server_name localhost;
-                location / {
-                  root html;
-                  index index.html index.htm;
-                }
                 location ~ ^(.*)\.kts(\?.*)?$ {
                   root html;
                   try_files $1.server.kts =404;
                   include fastcgi_params;
                   fastcgi_pass unix:$RUNNER_TEMP/kss.sock;
-                }
-                error_page 500 502 503 504 /50x.html;
-                location = /50x.html {
-                  root html;
                 }
               }
             }
