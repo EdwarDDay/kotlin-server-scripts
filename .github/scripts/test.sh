@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 set -eu
 set -o pipefail
@@ -24,11 +24,11 @@ for file in scripting-host/src/test/resources/*.server.kts; do
         --url "http://localhost:8080/$test_name.kts" \
         --output 'test_result.txt' \
         --dump-header 'test_headers.txt'
-    diff -q "$expected" 'test_result.txt'
+    diff "$expected" 'test_result.txt'
     if [[ -n "$expected_header" ]]; then
         missing_lines=$(diff --ignore-all-space -U 0 expected_header.txt test_headers.txt | tail -n +3 | grep -c '^-' || true)
         if [ "$missing_lines" -gt 0 ]; then
-            echo "didn't find expected headers"
+            echo "expected headers [$(cat expected_header.txt)] but found [$(cat test_headers.txt)]"
             exit 1
         fi
     fi

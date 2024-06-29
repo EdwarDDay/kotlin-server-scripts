@@ -1,6 +1,7 @@
 name: Develop
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches:
@@ -31,6 +32,7 @@ jobs:
         id: start_ngingx
         with:
           conf-file-text: |
+            user runner docker;
             worker_processes 1;
             events {
               worker_connections 1024;
@@ -43,28 +45,26 @@ jobs:
               server {
                 listen 8080;
                 server_name localhost;
-                location / {
-                  root html;
-                  index index.html index.htm;
-                }
                 location ~ ^(.*)\.kts(\?.*)?$ {
                   root html;
-                  try_files $1.server.kts =404;
+                  try_files \$1.server.kts =404;
                   include fastcgi_params;
-                  fastcgi_pass unix:${{env.RUNNER_TEMP}}/kss.sock;
-                }
-                error_page 500 502 503 504 /50x.html;
-                location = /50x.html {
-                  root html;
+                  fastcgi_pass unix:$RUNNER_TEMP/kss.sock;
                 }
               }
             }
 
-      - name: Start scripting host
-        uses: JarvusInnovations/background-action@v1.0.7
+      - name: Run tests on nginx
+        uses: BerniWittmann/background-server-action@v1.1.1
         with:
-          run: ./gradlew scripting-host:run --args="${{env.RUNNER_TEMP}}/kss.sock"
-          wait-on: socket:${{env.RUNNER_TEMP}}/kss.sock
+          start: ./gradlew scripting-host:run --args="$RUNNER_TEMP/kss.sock"
+          wait-on: sleep 5
+          command: ./.github/scripts/test.sh "${{ steps.start_ngingx.outputs.html-dir }}"
 
-      - name: Run tests on nginx server
-        run: ./.github/scripts/test.sh "${{ steps.nginx.outputs.html-dir }}"
+      - name: Print nginx error logs
+        if: ${{ failure() }}
+        run: cat "${{ steps.start_ngingx.outputs.error-log }}"
+
+      - name: Print nginx access logs
+        if: ${{ failure() }}
+        run: cat "${{ steps.start_ngingx.outputs.access-log }}"
