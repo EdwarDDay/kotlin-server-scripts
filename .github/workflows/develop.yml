@@ -59,3 +59,11 @@ jobs:
           start: ./gradlew scripting-host:run --args="$RUNNER_TEMP/kss.sock"
           wait-on: sleep 5
           command: ./.github/scripts/test.sh "${{ steps.start_ngingx.outputs.html-dir }}"
+
+      - name: Print nginx error logs
+        if: ${{ failure() }}
+        run: cat "${{ steps.start_ngingx.outputs.error-log }}"
+
+      - name: Print nginx access logs
+        if: ${{ failure() }}
+        run: cat "${{ steps.start_ngingx.outputs.access-log }}"
