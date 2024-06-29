@@ -32,6 +32,7 @@ jobs:
         id: start_ngingx
         with:
           conf-file-text: |
+            user runner docker;
             worker_processes 1;
             events {
               worker_connections 1024;
