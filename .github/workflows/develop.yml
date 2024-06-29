@@ -67,3 +67,7 @@ jobs:
       - name: Print nginx access logs
         if: ${{ failure() }}
         run: cat "${{ steps.start_ngingx.outputs.access-log }}"
+
+      - name: Print html directory content
+        if: ${{ failure() }}
+        run: ls -lisa "${{ steps.start_ngingx.outputs.html-dir }}"
