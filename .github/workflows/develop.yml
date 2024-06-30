@@ -25,7 +25,7 @@ jobs:
           java-version: 17
 
       - name: Build
-        run: ./gradlew build
+        run: ./gradlew build installDist
 
       - name: Start nginx
         uses: nyurik/action-setup-nginx@v1.1
@@ -54,10 +54,13 @@ jobs:
               }
             }
 
+      - name: Create test config
+        run: echo "socket.address=$RUNNER_TEMP/kss.sock" >> kss.properties
+
       - name: Run tests on nginx
         uses: BerniWittmann/background-server-action@v1.1.1
         with:
-          start: ./gradlew scripting-host:run --args="$RUNNER_TEMP/kss.sock"
+          start: ./scripting-host/build/install/scripting-host/bin/scripting-host
           wait-on: sleep 5
           command: ./.github/scripts/test.sh "${{ steps.start_ngingx.outputs.html-dir }}"
 

@@ -26,5 +26,5 @@ kotlin {
 }
 
 application {
-    mainClass.set("net.edwardday.serverscript.scripthost.ScriptingHostKt")
+    mainClass.set("net.edwardday.serverscript.scripthost.MainKt")
 }
