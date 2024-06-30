@@ -26,31 +26,15 @@ import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.setPosixFilePermissions
-import kotlin.system.exitProcess
-
-private const val DEFAULT_MAX_CONNECTIONS = 4
 
 private val logger = KotlinLogging.logger {}
-
-suspend fun main(vararg args: String) {
-    if (args.size !in 1..2) {
-        logger.error { "usage: <app> <fast cgi socket> [max connections=$DEFAULT_MAX_CONNECTIONS]" }
-        exitProcess(status = 1)
-    } else {
-        val input = args[0]
-        try {
-            readFromSocket(input, args.getOrNull(1)?.toInt() ?: DEFAULT_MAX_CONNECTIONS)
-        } finally {
-            logger.info { "stop kss process" }
-        }
-    }
-}
 
 suspend fun readFromSocket(socket: String, maxConnections: Int) {
     logger.info { "start kss process" }
     logger.debug { "reading from $socket with $maxConnections max connections" }
     val socketAddress = UnixDomainSocketAddress.of(socket)
     runInterruptible { Files.deleteIfExists(socketAddress.path) }
+    val socketPath = socketAddress.path.absolutePathString()
 
     val globalState = GlobalState(maxConnections)
     try {
@@ -64,7 +48,12 @@ suspend fun readFromSocket(socket: String, maxConnections: Int) {
                     PosixFilePermission.GROUP_READ, PosixFilePermission.GROUP_WRITE,
                 ),
             )
-            listenToConnections(maxConnections, serverChannel, socketAddress, globalState)
+            listenToConnections(
+                maxConnections = maxConnections,
+                serverChannel = serverChannel,
+                socketDescription = socketPath,
+                globalState = globalState,
+            )
         }
     } finally {
         runInterruptible {
@@ -76,7 +65,7 @@ suspend fun readFromSocket(socket: String, maxConnections: Int) {
 private suspend fun listenToConnections(
     maxConnections: Int,
     serverChannel: ServerSocketChannel,
-    socketAddress: UnixDomainSocketAddress,
+    socketDescription: String,
     globalState: GlobalState,
 ) {
     coroutineScope {
@@ -84,9 +73,9 @@ private suspend fun listenToConnections(
             withLoggingContext("Connection Index" to index.toString()) {
                 launch(MDCContext()) {
                     handleRequests(
-                        serverChannel,
-                        socketAddress,
-                        globalState.connectionStates[index]
+                        serverChannel = serverChannel,
+                        socketDescription = socketDescription,
+                        connectionState = globalState.connectionStates[index]
                     )
                 }
             }
@@ -96,21 +85,23 @@ private suspend fun listenToConnections(
 
 private suspend fun handleRequests(
     serverChannel: ServerSocketChannel,
-    socketAddress: UnixDomainSocketAddress,
+    socketDescription: String,
     connectionState: GlobalState.ConnectionState,
 ): Nothing {
     while (true) {
+        logger.debug { "listen for connection" }
         val socketChannel = try {
             runInterruptible(Dispatchers.IO, block = serverChannel::accept)
         } catch (e: Exception) {
-            throw IllegalStateException("cannot accept socket of ${socketAddress.path.absolutePathString()}", e)
+            throw IllegalStateException("cannot accept socket of $socketDescription", e)
         }
         logger.debug { "open connection" }
         val source = socketChannel.source().buffer()
         val sink = socketChannel.sink().buffer()
         while (true) {
             try {
-                val message = runInterruptible { FCGIRequestMessage.read(source) }
+                logger.trace { "read message" }
+                val message = runInterruptible(Dispatchers.IO) { FCGIRequestMessage.read(source) }
                 val result = connectionState.handleMessage(message)
                 val close = result.fold(false) { close, responseMessage ->
                     when (responseMessage) {
