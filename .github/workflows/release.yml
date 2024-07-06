@@ -1,0 +1,39 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  createRelease:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4.1.7
+
+      - name: set up JDK
+        uses: actions/setup-java@v4.1.0
+        with:
+          distribution: 'adopt'
+          java-version: 17
+
+      - name: Build
+        run: ./gradlew assembleDist
+
+      - name: Get Changelog
+        id: changelog
+        uses: mindsers/changelog-reader-action@v2.2.3
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2.0.6
+        with:
+          body: "${{ steps.changelog.outputs.changes }}"
+          fail_on_unmatched_files: true
+          files: |
+            scripting-host/build/distributions/scripting-host.tar
+            scripting-host/build/distributions/scripting-host.zip
+          draft: false
+          prerelease: false
