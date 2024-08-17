@@ -1,3 +1,5 @@
+import org.gradle.jvm.component.internal.JvmSoftwareComponentInternal
+
 /*
  * Copyright 2024 Eduard Wolf
  *
@@ -41,6 +43,68 @@ kotlin {
     jvmToolchain(17)
 }
 
+val createReleaseStartScript by tasks.registering {
+    val startScriptsTask = tasks.named("startScripts")
+    dependsOn(startScriptsTask)
+    val outputDirectory = layout.buildDirectory.dir("dist/release/scripts")
+    outputs.dir(outputDirectory)
+    doLast {
+        val directory = outputDirectory.get().asFile
+        startScriptsTask.get().outputs.files.flatMap {
+            if (it.isFile) listOf(it) else it.listFiles()?.asList().orEmpty()
+        }.map { script ->
+            val classpathLineStart: String
+            val replaceOriginal: String
+            val replaceNewValue: String
+            if (script.name.endsWith(".bat")) {
+                classpathLineStart = "set CLASSPATH="
+                replaceOriginal = "%APP_HOME%\\lib\\"
+                replaceNewValue = "%APP_HOME%\\kss_lib\\"
+            } else {
+                classpathLineStart = "CLASSPATH="
+                replaceOriginal = "\$APP_HOME/lib/"
+                replaceNewValue = "\$APP_HOME/kss_lib/"
+            }
+            File(directory, script.name).also { file ->
+                script.bufferedReader().useLines { scriptLines ->
+                    file.bufferedWriter().use { writer ->
+                        scriptLines.forEach { line ->
+                            val updatedLine = if (!line.startsWith(classpathLineStart)) {
+                                line
+                            } else {
+                                line.replace(replaceOriginal, replaceNewValue)
+                            }
+                            writer.appendLine(updatedLine)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+distributions {
+    create("release") {
+        contents {
+            into("bin") {
+                from(createReleaseStartScript)
+                into("kss_lib") {
+                    from(tasks.getByName("jar"))
+                    from((components["java"] as JvmSoftwareComponentInternal).mainFeature.runtimeClasspathConfiguration)
+                }
+            }
+            from("src/release")
+        }
+    }
+}
+
+tasks.named<Tar>("releaseDistTar") {
+    compression = Compression.GZIP
+    archiveExtension.set("tar.gz")
+}
+
 application {
     mainClass.set("net.edwardday.serverscript.scripthost.MainKt")
+    applicationName = "kss"
+    executableDir = ""
 }
