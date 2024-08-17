@@ -56,7 +56,7 @@ val createReleaseStartScript by tasks.registering {
             val classpathLineStart: String
             val replaceOriginal: String
             val replaceNewValue: String
-            if (script.name.endsWith(".bat")) {
+            if (script.extension == "bat") {
                 classpathLineStart = "set CLASSPATH="
                 replaceOriginal = "%APP_HOME%\\lib\\"
                 replaceNewValue = "%APP_HOME%\\kss_lib\\"
@@ -77,6 +77,9 @@ val createReleaseStartScript by tasks.registering {
                             writer.appendLine(updatedLine)
                         }
                     }
+                }
+                if (file.extension != "bat") {
+                    file.setExecutable(true, false)
                 }
             }
         }
