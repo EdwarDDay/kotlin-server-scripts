@@ -1,0 +1,15 @@
+[Unit]
+Description=The kss kotlin server scripts Process Manager
+After=network.target
+
+[Service]
+#Type=notify
+Type=simple
+User={{USER}}
+ExecStart={{DIRECTORY}}kss
+RestartSec=5
+Restart=on-failure
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

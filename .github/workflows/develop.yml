@@ -25,7 +25,7 @@ jobs:
           java-version: 17
 
       - name: Build
-        run: ./gradlew build installDist
+        run: ./gradlew build installReleaseDist
 
       - name: Start nginx
         uses: nyurik/action-setup-nginx@v1.1
@@ -60,7 +60,7 @@ jobs:
       - name: Run tests on nginx
         uses: BerniWittmann/background-server-action@v1.1.1
         with:
-          start: ./scripting-host/build/install/scripting-host/bin/scripting-host
+          start: ./scripting-host/build/install/scripting-host-release/bin/kss
           wait-on: sleep 5
           command: ./.github/scripts/test.sh "${{ steps.start_ngingx.outputs.html-dir }}"
 

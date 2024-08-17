@@ -21,7 +21,7 @@ jobs:
           java-version: 17
 
       - name: Build
-        run: ./gradlew assembleDist
+        run: ./gradlew assembleReleaseDist
 
       - name: Create info variables
         id: variables
@@ -41,7 +41,7 @@ jobs:
           body: "${{ steps.changelog.outputs.changes }}"
           fail_on_unmatched_files: true
           files: |
-            scripting-host/build/distributions/scripting-host.tar
-            scripting-host/build/distributions/scripting-host.zip
+            scripting-host/build/distributions/scripting-host-release.tar.gz
+            scripting-host/build/distributions/scripting-host-release.zip
           draft: false
           prerelease: false
