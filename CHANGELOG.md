@@ -5,6 +5,12 @@
 ### Added
 
 - Install script
+- sample configuration file
+- README
+
+### Changed
+
+- add working directory to service file
 
 ## [0.2.0] - 2024-08-17
 

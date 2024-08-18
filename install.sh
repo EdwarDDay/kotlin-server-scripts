@@ -31,6 +31,8 @@ function usageText {
   echo '-d/--directory[/usr/bin/]    directory for binary files'
   echo '-s/--service-directory[/etc/systemd/system/]'
   echo '                             directory for service files'
+  echo '-c/--configuration-directory[/usr/share/kss/]'
+  echo '                             directory for configuration files'
   echo '-u/--user[www-data]          user which runs the service process'
 }
 
@@ -49,6 +51,7 @@ function usage {
 authorization_token=''
 execution_directory='/usr/bin/'
 service_directory='/etc/systemd/system/'
+configuration_directory='/usr/share/kss/'
 service_user='www-data'
 
 while [[ $# -gt 0 ]]; do
@@ -86,6 +89,14 @@ while [[ $# -gt 0 ]]; do
       usage 'the --service-directory option needs an argument'
     fi
   ;;
+  -c|--configuration-directory)
+    if [ "$value" ]; then
+      configuration_directory="${value%/}/"
+      shift
+    else
+      usage 'the --configuration-directory option needs an argument'
+    fi
+  ;;
   -u|--user)
     if [ "$value" ]; then
       service_user="${value}"
@@ -104,15 +115,24 @@ done
 if [ ! -d "${execution_directory}" ]; then
   usage "'--directory' is set to '${execution_directory}' which is no existing directory. Please specify an existing directory."
 elif [ ! -w "${execution_directory}" ]; then
-  usage "Current user has no writer permissions to'${execution_directory}'. Please execute with a different user."
+  usage "Current user has no writer permissions for '${execution_directory}'. Please execute with a different user."
 fi
 
 if [ ! -d "${service_directory}" ]; then
   echo "'--service-directory' is set to '${service_directory}' which is no existing directory. Service won't be installed" >&2
   service_directory=''
-elif [ ! -w "${execution_directory}" ]; then
-  echo "Current user has no writer permissions to'${service_directory}'. Service won't be installed" >&2
+elif [ ! -w "${service_directory}" ]; then
+  echo "Current user has no writer permissions for '${service_directory}'. Service won't be installed" >&2
   service_directory=''
+else
+  if [ ! -d "${configuration_directory}" ]; then
+    echo "'--configuration-directory' (${configuration_directory}) not found. Try to create it" >&2
+    mkdir -p "${configuration_directory}"
+  fi
+  if [ ! -w "${configuration_directory}" ]; then
+    echo "Current user has no writer permissions for '${configuration_directory}'. Service won't be installed" >&2
+    service_directory=''
+  fi
 fi
 
 authorization_args=()
@@ -153,8 +173,18 @@ if [[ -n "${service_directory}" ]]; then
   echo 'configure service' >&2
   # escape sed escape char
   service_user="${service_user/|/\\\|}"
-  tar --extract --gunzip --file "${archive_name}" --to-stdout 'scripting-host-release/service/kss.service' | sed "s|{{DIRECTORY}}|${execution_directory}|g" | sed "s|{{USER}}|${service_user}|g" > "${service_directory}kss.service"
+  tar --extract --gunzip --file "${archive_name}" --to-stdout 'scripting-host-release/service/kss.service' |\
+   sed "s|{{DIRECTORY}}|${execution_directory}|g" | sed "s|{{WORKING_DIRECTORY}}|${configuration_directory}|g" | sed "s|{{USER}}|${service_user}|g" \
+   > "${service_directory}kss.service"
   systemctl enable kss
+  echo 'The system service is enabled. Run'
+  echo ''
+  echo 'systemctl start kss'
+  echo ''
+  echo 'to start the service'
+
+  tar --extract --gunzip --file "${archive_name}" --strip-components 2 --directory "${configuration_directory}" 'scripting-host-release/config/'
+  echo "A sample configuration is in '${configuration_directory}'. Remove the '.sample' extension and edit it as you see fit."
 fi
 
 echo 'delete archive' >&2

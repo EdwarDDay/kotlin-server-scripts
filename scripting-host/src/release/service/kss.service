@@ -3,10 +3,10 @@ Description=The kss kotlin server scripts Process Manager
 After=network.target
 
 [Service]
-#Type=notify
 Type=simple
 User={{USER}}
 ExecStart={{DIRECTORY}}kss
+WorkingDirectory={{WORKING_DIRECTORY}}
 RestartSec=5
 Restart=on-failure
 TimeoutStopSec=30

@@ -1,0 +1,4 @@
+# max amount of synchronous connections to the kss process
+connections.max=4
+# path to the socket to read fcgi data from
+socket.address=/var/run/kss/kss.sock
