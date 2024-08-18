@@ -2,6 +2,8 @@
 
 ## [UNRELEASED]
 
+## [0.2.1]
+
 ### Added
 
 - Install script
@@ -28,6 +30,8 @@
 ### Added
 
 - Initial Version
+
+[0.2.1]: https://github.com/EdwarDDay/kotlin-server-scripts/releases/tag/0.2.1
 
 [0.2.0]: https://github.com/EdwarDDay/kotlin-server-scripts/releases/tag/0.2.0
 
