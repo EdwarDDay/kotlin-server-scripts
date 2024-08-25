@@ -2,6 +2,10 @@
 
 ## [UNRELEASED]
 
+### Added
+
+- MacOS option in install script
+
 ## [0.3.0]
 
 ### Added

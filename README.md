@@ -11,12 +11,12 @@ archive, installs the executable and creates and enables a system service.
 curl 'https://raw.githubusercontent.com/EdwarDDay/kotlin-server-scripts/main/install.sh' --output install.sh
 chmod u+x install.sh
 ./install.sh # admin privileges might be needed 
+./install.sh --directory '/opt/local/bin' --user '_www' # for MacOS
 ```
 
 The `install.sh` script will by default save the executable in the `/usr/bin/` directory, creates system service file
-in the `/etc/systemd/system/` directory with `www-data` as service execution user and puts a configuration sample file
-in `/usr/share/kss/`. If you want to configure any of these settings, execute `./install.sh --help` for more
-information.
+with `www-data` as service execution user and puts a configuration sample file. If you want to configure any of these
+settings or see the default values, execute `./install.sh --help` for more information.
 
 ### Nginx setup
 
