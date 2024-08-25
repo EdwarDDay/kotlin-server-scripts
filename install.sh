@@ -19,20 +19,43 @@
 set -eu
 set -o pipefail
 
+if [[ -n $(command -v systemctl || echo '') ]]; then
+  service_binary="systemctl"
+  service_directory='/etc/systemd/system/'
+  configuration_directory='/usr/share/kss/'
+  log_directory=''
+  service_file='kss.service'
+elif [[ -n $(command -v launchctl || echo '') ]]; then
+  service_binary="launchctl"
+  service_directory='/Library/LaunchDaemons/'
+  configuration_directory='/Library/Application Support/kss/'
+  log_directory='/Library/Logs/'
+  service_file='kss.plist'
+else
+  service_binary=''
+  service_directory=''
+  configuration_directory=''
+  log_directory=''
+  service_file='kss.service'
+fi
+
+
 PROGRAM_NAME=$(basename "$0")
 
 function usageText {
-  echo 'Usage: '"${PROGRAM_NAME}"' [OPTIONS]'
+  echo 'Usage: '"$PROGRAM_NAME"' [OPTIONS]'
   echo 'install latest kss release'
   echo ''
   echo 'Options:'
   echo '-h/--help                    prints this usage'
   echo '-t/--token                   github token to use to download executables'
   echo '-d/--directory[/usr/bin/]    directory for binary files'
-  echo '-s/--service-directory[/etc/systemd/system/]'
+  echo "-s/--service-directory[$service_directory]"
   echo '                             directory for service files'
-  echo '-c/--configuration-directory[/usr/share/kss/]'
+  echo "-c/--configuration-directory[$configuration_directory]"
   echo '                             directory for configuration files'
+  echo "-l/--log-directory[$log_directory]"
+  echo '                             directory for log files (only used in MacOS)'
   echo '-u/--user[www-data]          user which runs the service process'
 }
 
@@ -50,8 +73,6 @@ function usage {
 
 authorization_token=''
 execution_directory='/usr/bin/'
-service_directory='/etc/systemd/system/'
-configuration_directory='/usr/share/kss/'
 service_user='www-data'
 
 while [[ $# -gt 0 ]]; do
@@ -97,6 +118,14 @@ while [[ $# -gt 0 ]]; do
       usage 'the --configuration-directory option needs an argument'
     fi
   ;;
+  -l|--log-directory)
+    if [ "$value" ]; then
+      log_directory="${value%/}/"
+      shift
+    else
+      usage 'the --log-directory option needs an argument'
+    fi
+  ;;
   -u|--user)
     if [ "$value" ]; then
       service_user="${value}"
@@ -129,8 +158,18 @@ else
     echo "'--configuration-directory' (${configuration_directory}) not found. Try to create it" >&2
     mkdir -p "${configuration_directory}"
   fi
+  if [ ! -d "${log_directory}" ]; then
+    echo "'--log-directory' (${log_directory}) not found. Try to create it" >&2
+    mkdir -p "${log_directory}"
+  fi
   if [ ! -w "${configuration_directory}" ]; then
     echo "Current user has no writer permissions for '${configuration_directory}'. Service won't be installed" >&2
+    service_directory=''
+  elif [ ! -w "${log_directory}" ]; then
+    echo "Current user has no writer permissions for '${log_directory}'. Service won't be installed" >&2
+    service_directory=''
+  elif ! id "$service_user" >/dev/null 2>&1; then
+    echo "User '$service_user' does not exist. Service won't be installed" >&2
     service_directory=''
   fi
 fi
@@ -173,15 +212,29 @@ if [[ -n "${service_directory}" ]]; then
   echo 'configure service' >&2
   # escape sed escape char
   service_user="${service_user/|/\\\|}"
-  tar --extract --gunzip --file "${archive_name}" --to-stdout 'scripting-host-release/service/kss.service' |\
-   sed "s|{{DIRECTORY}}|${execution_directory}|g" | sed "s|{{WORKING_DIRECTORY}}|${configuration_directory}|g" | sed "s|{{USER}}|${service_user}|g" \
-   > "${service_directory}kss.service"
-  systemctl enable kss
-  echo 'The system service is enabled. Run'
-  echo ''
-  echo 'systemctl start kss'
-  echo ''
-  echo 'to start the service'
+  tar --extract --gunzip --file "${archive_name}" --to-stdout "scripting-host-release/service/$service_file" |\
+   sed "s|{{DIRECTORY}}|${execution_directory}|g" | \
+   sed "s|{{WORKING_DIRECTORY}}|${configuration_directory}|g" | \
+   sed "s|{{LOG_DIRECTORY}}|${log_directory}|g" | \
+   sed "s|{{USER}}|${service_user}|g" \
+   > "$service_directory$service_file"
+  case $service_binary in
+  systemctl)
+    systemctl enable kss
+    echo 'The system service is enabled. Run'
+    echo ''
+    echo 'systemctl start kss'
+    echo ''
+    echo 'to start the service'
+    ;;
+  launchctl)
+    echo 'The launch daemon is enabled. Run'
+    echo ''
+    echo "launchctl load $service_directory$service_file"
+    echo ''
+    echo 'to start the daemon'
+    ;;
+  esac
 
   tar --extract --gunzip --file "${archive_name}" --strip-components 2 --directory "${configuration_directory}" 'scripting-host-release/config/'
   echo "A sample configuration is in '${configuration_directory}'. Remove the '.sample' extension and edit it as you see fit."
