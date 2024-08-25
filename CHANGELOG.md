@@ -2,6 +2,8 @@
 
 ## [UNRELEASED]
 
+## [0.4.0]
+
 ### Added
 
 - MacOS option in install script
@@ -34,6 +36,8 @@
 ### Added
 
 - Initial Version
+
+[0.4.0]: https://github.com/EdwarDDay/kotlin-server-scripts/releases/tag/0.4.0
 
 [0.3.0]: https://github.com/EdwarDDay/kotlin-server-scripts/releases/tag/0.3.0
 
