@@ -2,6 +2,10 @@
 
 ## [UNRELEASED]
 
+### Added
+
+- test for `@Repository` annotation
+
 ## [0.4.0]
 
 ### Added

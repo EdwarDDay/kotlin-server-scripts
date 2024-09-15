@@ -41,7 +41,7 @@ class ServerScriptingHostScriptsTest(private val testCaseName: String) {
         @Parameterized.Parameters(name = "script:{0}")
         fun data() = listOf(
             "simple_script", "custom_headers", "known_status", "unknown_status",
-            "big_output", "dependency", "multiple_output",
+            "big_output", "dependency", "dependency_repository", "multiple_output",
         )
     }
 }

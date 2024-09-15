@@ -34,7 +34,7 @@ location ~ ^(.*)\.kts(\?.*)?$ {
 }
 ```
 
-## Small Example
+## Example
 
 Example script looks like:
 
@@ -58,6 +58,12 @@ writeOutput(
 ```
 
 You can find more examples in the [test folder](scripting-host/src/test/resources)
+
+### Add dependencies
+
+If you want to add a maven dependency, you can add a `@file:DependsOn("<artifact id>"")` annotation to the file. If your
+dependency isn't in the maven central repository, you can add additional repositories via a
+`@file:Repository("<repository url>")` annotation at file level.
 
 ## Building
 
