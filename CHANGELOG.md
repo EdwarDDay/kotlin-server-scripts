@@ -6,6 +6,10 @@
 
 - test for `@Repository` annotation
 
+### Changed
+
+- updated various dependencies
+
 ## [0.4.0]
 
 ### Added
