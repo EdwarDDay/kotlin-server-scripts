@@ -3,7 +3,7 @@ kotlin = "2.0.20"
 kotlinx-coroutines = "1.7.1"
 logback = "1.5.8"
 oshai-logging = "7.0.0"
-okio = "3.4.0"
+okio = "3.9.1"
 
 [libraries]
 kotlin-scripting-common = { module = "org.jetbrains.kotlin:kotlin-scripting-common", version.ref = "kotlin" }
