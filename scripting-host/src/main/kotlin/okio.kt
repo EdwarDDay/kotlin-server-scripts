@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2018 Square, Inc.
  * Copyright 2024 Eduard Wolf
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,6 +34,18 @@ fun ReadableByteChannel.source(): Source {
     return timeout.source(ByteChannelSource(this, timeout))
 }
 
+/*
+ * Copy from
+ * https://github.com/square/okio/blob/b284bc07803e4f9658a1e65c55d57abe28c85c1e/samples/src/jvmMain/java/okio/samples/ByteChannelSource.java
+ * and converted to kotlin
+ */
+/**
+ * Creates a [Source] around a [ReadableByteChannel] and efficiently reads data using an [Buffer.UnsafeCursor].
+ *
+ * This is a basic example showing another use for the [Buffer.UnsafeCursor]. Using the [ByteBuffer.wrap] along with
+ * access to [Buffer] segments, a [ReadableByteChannel] can be given direct access to [Buffer] data without having to
+ * copy the data.
+ */
 internal class ByteChannelSource(private val channel: ReadableByteChannel, private val timeout: Timeout) : Source {
     private val cursor: Buffer.UnsafeCursor = Buffer.UnsafeCursor()
 
@@ -69,6 +82,18 @@ fun WritableByteChannel.sink(): Sink {
     return timeout.sink(ByteChannelSink(this, timeout))
 }
 
+/*
+ * Copy from
+ * https://github.com/square/okio/blob/b284bc07803e4f9658a1e65c55d57abe28c85c1e/samples/src/jvmMain/java/okio/samples/ByteChannelSink.java
+ * and converted to kotlin
+ */
+/**
+ * Creates a [Sink] around a [WritableByteChannel] and efficiently writes data using an [Buffer.UnsafeCursor].
+ *
+ * This is a basic example showing another use for the [Buffer.UnsafeCursor]. Using the [ByteBuffer.wrap] along with
+ * access to [Buffer] segments, a [WritableByteChannel] can be given direct access to [Buffer] data without having to
+ * copy the data.
+ */
 internal class ByteChannelSink(private val channel: WritableByteChannel, private val timeout: Timeout) : Sink {
     private val cursor: Buffer.UnsafeCursor = Buffer.UnsafeCursor()
 
