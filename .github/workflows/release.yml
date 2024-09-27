@@ -12,7 +12,7 @@ jobs:
       contents: write
     steps:
       - name: checkout
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
 
       - name: set up JDK
         uses: actions/setup-java@v4.4.0
