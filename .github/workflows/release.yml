@@ -36,7 +36,7 @@ jobs:
           validation_level: error
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2.0.8
+        uses: softprops/action-gh-release@v2.0.9
         with:
           body: "${{ steps.changelog.outputs.changes }}"
           fail_on_unmatched_files: true
