@@ -57,7 +57,7 @@ jobs:
       - name: Create test config
         run: |
           echo "socket.address=$RUNNER_TEMP/kss.sock" >> kss.properties
-          cp .github/config/logback.xml > kss.logback.xml
+          cp .github/config/logback.xml kss.logback.xml
           echo "logging.logback.configurationFile=kss.logback.xml" >> kss.properties
 
       - name: Run tests on nginx
