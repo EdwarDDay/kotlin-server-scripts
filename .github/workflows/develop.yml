@@ -55,7 +55,10 @@ jobs:
             }
 
       - name: Create test config
-        run: echo "socket.address=$RUNNER_TEMP/kss.sock" >> kss.properties
+        run: |
+          echo "socket.address=$RUNNER_TEMP/kss.sock" >> kss.properties
+          cp .github/config/logback.xml kss.logback.xml
+          echo "logging.logback.configurationFile=kss.logback.xml" >> kss.properties
 
       - name: Run tests on nginx
         uses: BerniWittmann/background-server-action@v1.1.1
@@ -64,6 +67,17 @@ jobs:
           wait-on: sleep 5
           command: ./.github/scripts/test.sh "${{ steps.start_ngingx.outputs.html-dir }}"
 
+      - name: Test logfile not empty
+        run: |
+          if [ ! -f log.txt ]; then
+            echo "log.txt file doesn't exist"
+            exit 1
+          fi
+          if [ ! -s log.txt ]; then
+            echo 'log.txt file is empty'
+            exit 2
+          fi
+
       - name: Print nginx error logs
         if: ${{ failure() }}
         run: cat "${{ steps.start_ngingx.outputs.error-log }}"
@@ -71,3 +85,7 @@ jobs:
       - name: Print nginx access logs
         if: ${{ failure() }}
         run: cat "${{ steps.start_ngingx.outputs.access-log }}"
+
+      - name: Print kss process logs
+        if: ${{ failure() }}
+        run: cat log.txt

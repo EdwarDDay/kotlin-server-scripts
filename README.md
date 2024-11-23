@@ -65,6 +65,12 @@ If you want to add a maven dependency, you can add a `@file:DependsOn("<artifact
 dependency isn't in the maven central repository, you can add additional repositories via a
 `@file:Repository("<repository url>")` annotation at file level.
 
+### Change logging configuration
+
+You can reference a [logback configuration file](https://logback.qos.ch/manual/configuration.html) in the
+`kss.properties` configuration file via `logging.logback.configurationFile=<path to file>`. This way you can change the
+log level from the default `info` or log to a file instead of the command line as it's done by default.
+
 ## Building
 
 To build the library just run `./gradlew scripting-host:build`.

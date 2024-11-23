@@ -5,6 +5,7 @@
 ### Added
 
 - test for `@Repository` annotation
+- change logging configuration via properties file
 
 ### Changed
 
