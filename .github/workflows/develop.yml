@@ -70,7 +70,7 @@ jobs:
       - name: Test logfile not empty
         run: |
           if [ ! -f log.txt ]; then
-            echo 'log.txt file doesn't exist'
+            echo "log.txt file doesn't exist"
             exit 1
           fi
           if [ ! -s log.txt ]; then
