@@ -23,7 +23,7 @@ import java.util.*
 
 private const val CONFIG_FILE_NAME = "kss.properties"
 
-suspend fun main() {
+private fun loadProperties(): Properties {
     // load default config
     val defaultConfig = try {
         Thread.currentThread()
@@ -53,9 +53,18 @@ suspend fun main() {
         val keyAsString = key.toString()
         System.getProperty(keyAsString)?.also { value -> commandLineConfig[keyAsString] = value }
     }
+    return commandLineConfig
+}
 
-    val socket = commandLineConfig.getProperty("socket.address") ?: "unix:/var/run/kss/kss.sock"
-    val maxConnections = commandLineConfig.getProperty("connections.max")?.toIntOrNull() ?: 4
+suspend fun main() {
+    val properties = loadProperties()
+
+    val loggingFile = properties.getProperty("logging.logback.configurationFile").orEmpty()
+    if (loggingFile.isNotEmpty() && File(loggingFile).exists()) {
+        System.setProperty("logback.configurationFile", loggingFile)
+    }
+    val socket = properties.getProperty("socket.address") ?: "unix:/var/run/kss/kss.sock"
+    val maxConnections = properties.getProperty("connections.max")?.toIntOrNull() ?: 4
 
     readFromSocket(
         socket = socket,

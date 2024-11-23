@@ -7,7 +7,9 @@ Type=simple
 User={{USER}}
 ExecStart={{DIRECTORY}}kss
 WorkingDirectory={{WORKING_DIRECTORY}}
-RestartSec=5
+RestartSec=10
+RestartMaxDelaySec=300
+RestartSteps=29
 Restart=on-failure
 TimeoutStopSec=30
 

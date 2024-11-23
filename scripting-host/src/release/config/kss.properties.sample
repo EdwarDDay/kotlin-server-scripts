@@ -2,3 +2,5 @@
 connections.max=4
 # path to the socket to read fcgi data from
 socket.address=/var/run/kss/kss.sock
+# path to custom logback logging configuration file
+logging.logback.configurationFile=
