@@ -60,7 +60,7 @@ jobs:
         id: start_ngingx
         with:
           conf-file-text: |
-            user runner docker;
+            user www-data;
             worker_processes 1;
             events {
               worker_connections 1024;
@@ -91,7 +91,7 @@ jobs:
       - name: Run tests on nginx
         uses: BerniWittmann/background-server-action@v1.1.1
         with:
-          start: ./scripting-host-release/bin/kss
+          start: sudo -u www-data ./scripting-host-release/bin/kss
           wait-on: sleep 5
           command: ./.github/scripts/test.sh "${{ steps.start_ngingx.outputs.html-dir }}"
 
