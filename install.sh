@@ -20,18 +20,21 @@ set -eu
 set -o pipefail
 
 if [[ -n $(command -v systemctl || echo '') ]]; then
-  service_binary="systemctl"
+  echo 'use systemctl default values' >&2
+  service_binary='systemctl'
   service_directory='/etc/systemd/system/'
   configuration_directory='/usr/share/kss/'
   log_directory=''
   service_file='kss.service'
 elif [[ -n $(command -v launchctl || echo '') ]]; then
-  service_binary="launchctl"
+  echo 'use launchctl default values' >&2
+  service_binary='launchctl'
   service_directory='/Library/LaunchDaemons/'
   configuration_directory='/Library/Application Support/kss/'
   log_directory='/Library/Logs/'
   service_file='kss.plist'
 else
+  echo 'use empty default values' >&2
   service_binary=''
   service_directory=''
   configuration_directory=''
@@ -153,20 +156,17 @@ if [ ! -d "${service_directory}" ]; then
 elif [ ! -w "${service_directory}" ]; then
   echo "Current user has no writer permissions for '${service_directory}'. Service won't be installed" >&2
   service_directory=''
-else
+elif [ -n "${service_binary}" ]; then
   if [ ! -d "${configuration_directory}" ]; then
     echo "'--configuration-directory' (${configuration_directory}) not found. Try to create it" >&2
     mkdir -p "${configuration_directory}"
   fi
-  if [ ! -d "${log_directory}" ]; then
+  if [ -n "${log_directory}" ] && [ ! -d "${log_directory}" ]; then
     echo "'--log-directory' (${log_directory}) not found. Try to create it" >&2
     mkdir -p "${log_directory}"
   fi
   if [ ! -w "${configuration_directory}" ]; then
     echo "Current user has no writer permissions for '${configuration_directory}'. Service won't be installed" >&2
-    service_directory=''
-  elif [ ! -w "${log_directory}" ]; then
-    echo "Current user has no writer permissions for '${log_directory}'. Service won't be installed" >&2
     service_directory=''
   elif ! id "$service_user" >/dev/null 2>&1; then
     echo "User '$service_user' does not exist. Service won't be installed" >&2
