@@ -52,8 +52,11 @@ jobs:
         with:
           name: release-artifact
 
-      - name: Untar release artifact
-        run: tar --extract --gunzip --file scripting-host-release.tar.gz
+      - name: Prepare scripting host
+        run: |
+          tar --extract --gunzip --file scripting-host-release.tar.gz
+          sudo chown www-data:www-data ./scripting-host-release/bin/kss
+          sudo chown www-data:www-data ./scripting-host-release/bin/kss_lib/*.jar
 
       - name: Start nginx
         uses: nyurik/action-setup-nginx@v1.1
