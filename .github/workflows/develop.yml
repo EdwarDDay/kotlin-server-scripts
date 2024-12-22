@@ -10,22 +10,47 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-
     steps:
       - name: checkout
         uses: actions/checkout@v4.2.2
 
-      - name: validation
-        uses: gradle/actions/wrapper-validation@v4.2.2
-
-      - name: set up JDK
+      - name: Setup JDK
         uses: actions/setup-java@v4.6.0
         with:
           distribution: 'adopt'
           java-version: 17
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4.2.2
+
       - name: Build
         run: ./gradlew build installReleaseDist
+
+      - name: Upload build
+        uses: actions/upload-artifact@v4.5.0
+        with:
+          name: release-artifact
+          path: scripting-host/build/install/scripting-host-release/
+          retention-days: 7
+
+  test:
+    runs-on: ubuntu-24.04
+    needs: [build]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4.6.0
+        with:
+          distribution: 'adopt'
+          java-version: 17
+
+      - name: Download build
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: release-artifact
+          path: scripting-host/build/install/scripting-host-release/
 
       - name: Start nginx
         uses: nyurik/action-setup-nginx@v1.1
