@@ -10,22 +10,50 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-
     steps:
       - name: checkout
         uses: actions/checkout@v4.2.2
 
-      - name: validation
-        uses: gradle/actions/wrapper-validation@v4.2.2
-
-      - name: set up JDK
+      - name: Setup JDK
         uses: actions/setup-java@v4.6.0
         with:
           distribution: 'adopt'
           java-version: 17
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4.2.2
+
       - name: Build
-        run: ./gradlew build installReleaseDist
+        run: ./gradlew build
+
+      - name: Upload build
+        uses: actions/upload-artifact@v4.5.0
+        with:
+          name: release-artifact
+          path: scripting-host/build/distributions/scripting-host-release.tar.gz
+          compression-level: '0'
+          retention-days: 7
+
+  test:
+    runs-on: ubuntu-24.04
+    needs: [build]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4.6.0
+        with:
+          distribution: 'adopt'
+          java-version: 17
+
+      - name: Download build
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: release-artifact
+
+      - name: Untar release artifact
+        run: tar --extract --gunzip --file scripting-host-release.tar.gz
 
       - name: Start nginx
         uses: nyurik/action-setup-nginx@v1.1
@@ -63,7 +91,7 @@ jobs:
       - name: Run tests on nginx
         uses: BerniWittmann/background-server-action@v1.1.1
         with:
-          start: ./scripting-host/build/install/scripting-host-release/bin/kss
+          start: ./scripting-host-release/bin/kss
           wait-on: sleep 5
           command: ./.github/scripts/test.sh "${{ steps.start_ngingx.outputs.html-dir }}"
 
