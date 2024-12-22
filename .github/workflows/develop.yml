@@ -24,13 +24,14 @@ jobs:
         uses: gradle/actions/setup-gradle@v4.2.2
 
       - name: Build
-        run: ./gradlew build installReleaseDist
+        run: ./gradlew build
 
       - name: Upload build
         uses: actions/upload-artifact@v4.5.0
         with:
           name: release-artifact
-          path: scripting-host/build/install/scripting-host-release/
+          path: scripting-host/build/distributions/scripting-host-release.tar.gz
+          compression-level: '0'
           retention-days: 7
 
   test:
@@ -50,7 +51,10 @@ jobs:
         uses: actions/download-artifact@v4.1.8
         with:
           name: release-artifact
-          path: scripting-host/build/install/scripting-host-release/
+          path: scripting-host/build/distributions/scripting-host-release.tar.gz
+
+      - name: Untar release artifact
+        run: tar --extract --gunzip --file scripting-host/build/distributions/scripting-host-release.tar.gz
 
       - name: Start nginx
         uses: nyurik/action-setup-nginx@v1.1
@@ -88,7 +92,7 @@ jobs:
       - name: Run tests on nginx
         uses: BerniWittmann/background-server-action@v1.1.1
         with:
-          start: ./scripting-host/build/install/scripting-host-release/bin/kss
+          start: ./scripting-host-release/bin/kss
           wait-on: sleep 5
           command: ./.github/scripts/test.sh "${{ steps.start_ngingx.outputs.html-dir }}"
 
