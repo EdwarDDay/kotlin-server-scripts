@@ -117,3 +117,28 @@ jobs:
       - name: Print kss process logs
         if: ${{ failure() }}
         run: cat log.txt
+
+  test_install_script:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4.6.0
+        with:
+          distribution: 'adopt'
+          java-version: 17
+
+      - name: install latest version
+        run: sudo ./install.sh
+
+      - name: check install
+        run:
+          timeout 5s kss
+          retVal=$?
+          # 124 is cancelled after timeout
+          if [ $retVal -ne 124 ]
+          then 
+            exit $retVal
+          fi
