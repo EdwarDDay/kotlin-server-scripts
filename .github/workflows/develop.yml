@@ -51,10 +51,9 @@ jobs:
         uses: actions/download-artifact@v4.1.8
         with:
           name: release-artifact
-          path: scripting-host/build/distributions/scripting-host-release.tar.gz
 
       - name: Untar release artifact
-        run: tar --extract --gunzip --file scripting-host/build/distributions/scripting-host-release.tar.gz
+        run: tar --extract --gunzip --file scripting-host-release.tar.gz
 
       - name: Start nginx
         uses: nyurik/action-setup-nginx@v1.1
