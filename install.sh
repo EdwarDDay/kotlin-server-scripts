@@ -191,12 +191,22 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+if [ "${release_fetch_mode}" == 'unknown' ] && [[ -n $(command -v jq || echo '') ]]; then
+  release_fetch_mode='curl'
+fi
+
 if [ "${release_fetch_mode}" == 'curl-authenticated' ] && [ "${authorization_token}" == '' ]; then
-    usage "'--release-fetch-mode' with option 'curl-authenticated' needs also '--token' to be specified"
+  usage "'--release-fetch-mode' with option 'curl-authenticated' needs also '--token' to be specified"
 fi
 
 if [ "${release_fetch_mode}" == 'unknown' ]; then
-    usage "please specify '--release-fetch-mode' as no default option was found"
+  usage "please specify '--release-fetch-mode' as no default option was found"
+fi
+
+if [ "${release_fetch_mode}" == 'gh' ]; then
+  if gh auth status >/dev/null || [ "${GH_TOKEN}" != '' ]; then
+    usage "gh commandline tool is not setup. Please login via 'gh auth login', specify 'GH_TOKEN' or use '--release-fetch-mode curl' or '--release-fetch-mode curl-authenticated --token <GH PAT token>'"
+  fi
 fi
 
 if [ ! -d "${execution_directory}" ]; then
@@ -252,7 +262,6 @@ function extractUrlFromGraphqlQuery() {
 case "$release_fetch_mode" in
 gh)
   echo 'download latest release data via gh commandline tool' >&2
-  gh auth status >/dev/null || usage "gh commandline tool is not setup. Please login via 'gh auth login' or use '--release-fetch-mode curl' or '--release-fetch-mode curl-authenticated --token <GH PAT token>'"
   response="$(gh api graphql -F 'user=EdwarDDay' -F 'repo=kotlin-server-scripts' -F 'asset=scripting-host-release.tar.gz' -f "query=$query")"
   url="$(extractUrlFromGraphqlQuery "$response")"
   ;;
