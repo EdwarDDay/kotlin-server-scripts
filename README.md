@@ -18,6 +18,10 @@ The `install.sh` script will by default save the executable in the `/usr/bin/` d
 with `www-data` as service execution user and puts a configuration sample file. If you want to configure any of these
 settings or see the default values, execute `./install.sh --help` for more information.
 
+To fetch the release asset, the script needs either authorized access to the GitHub API - either via a GH PAT
+(`--token` option) or via the authenticated `gh` commandline tool - or needs the `jq` tool to parse the GitHub REST
+response.
+
 ### Nginx setup
 
 To execute server scripts, add something like the following configuration to you nginx.conf:

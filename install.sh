@@ -42,6 +42,11 @@ else
   service_file='kss.service'
 fi
 
+if [[ -n $(command -v gh || echo '') ]]; then
+  release_fetch_mode="gh"
+else
+  release_fetch_mode="unknown"
+fi
 
 PROGRAM_NAME=$(basename "$0")
 
@@ -53,6 +58,10 @@ function usageText {
   echo '-h/--help                    prints this usage'
   echo '-t/--token                   github token to use to download executables'
   echo '-d/--directory[/usr/bin/]    directory for binary files'
+  echo '-r/--release-fetch-mode      Options:'
+  echo '                             gh - use authenticated Github commandline tool'
+  echo '                             curl-authenticated - use curl authenticated with the token from the --token option'
+  echo '                             curl - use curl without token - needs jq to parse rest response'
   echo "-s/--service-directory[$service_directory]"
   echo '                             directory for service files'
   echo "-c/--configuration-directory[$configuration_directory]"
@@ -77,6 +86,7 @@ function usage {
 authorization_token=''
 execution_directory='/usr/bin/'
 service_user='www-data'
+release_fetch_mode_set='false'
 
 while [[ $# -gt 0 ]]; do
   key="$1"
@@ -92,6 +102,9 @@ while [[ $# -gt 0 ]]; do
   -t|--token)
     if [ "$value" ]; then
       authorization_token="$value"
+      if [ "${release_fetch_mode_set}" == 'false' ] && [ "${release_fetch_mode}" != 'gh' ]; then
+          release_fetch_mode='curl-authenticated'
+      fi
       shift
     else
       usage 'the --token option needs an argument'
@@ -103,6 +116,40 @@ while [[ $# -gt 0 ]]; do
       shift
     else
       usage 'the --directory option needs an argument'
+    fi
+  ;;
+  -r|--release-fetch-mode)
+    release_fetch_mode_set='true'
+    case $value in
+    gh)
+      if [[ -n $(command -v gh || echo '') ]]; then
+        release_fetch_mode="gh"
+      else
+        usage '--release-fetch-mode set to gh but can'\''t find gh command'
+      fi
+      ;;
+    curl-authenticated)
+      release_fetch_mode="curl-authenticated"
+      ;;
+    curl)
+      if [[ -n $(command -v jq || echo '') ]]; then
+        release_fetch_mode="curl"
+      else
+        usage '--release-fetch-mode set to curl but can'\''t find jq command, which is needed to parse the REST API'
+      fi
+      ;;
+    '')
+      usage 'the --release-fetch-mode option needs an argument'
+      ;;
+    *)
+      usage "unknown option ${value} for option --release-fetch-mode - please specify gh, curl-authenticated or curl"
+    ;;
+    esac
+    if [ "$value" ]; then
+      execution_directory="${value%/}/"
+      shift
+    else
+      usage 'the --release-fetch-mode option needs an argument'
     fi
   ;;
   -s|--service-directory)
@@ -144,6 +191,14 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+if [ "${release_fetch_mode}" == 'curl-authenticated' ] && [ "${authorization_token}" == '' ]; then
+    usage "'--release-fetch-mode' with option 'curl-authenticated' needs also '--token' to be specified"
+fi
+
+if [ "${release_fetch_mode}" == 'unknown' ]; then
+    usage "please specify '--release-fetch-mode' as no default option was found"
+fi
+
 if [ ! -d "${execution_directory}" ]; then
   usage "'--directory' is set to '${execution_directory}' which is no existing directory. Please specify an existing directory."
 elif [ ! -w "${execution_directory}" ]; then
@@ -181,28 +236,50 @@ fi
 
 github_args=(--location ${authorization_args[@]+"${authorization_args[@]}"} --header 'X-GitHub-Api-Version: 2022-11-28')
 
-echo 'test repository access' >&2
+# shellcheck disable=SC2016
+query='query ($user: String!, $repo: String!, $asset: String!) { repository(owner: $user, name: $repo) { latestRelease { releaseAssets(name: $asset, first: 1) { nodes { url } } } } }'
 
-auth_test_response_code="$(curl "${github_args[@]}" --header 'Accept: application/vnd.github+json' --head --silent \
-  --write-out '%{response_code}\n' --output '/dev/null' \
-  --url 'https://api.github.com/repos/EdwarDDay/kotlin-server-scripts')"
+function extractUrlFromGraphqlQuery() {
+    local response=$1
+    if [[ -n $(command -v jq || echo '') ]]; then
+      jq --raw-output '.data.repository.latestRelease.releaseAssets.nodes[0].url' <<< "$response"
+    else
+      local response_tmp="${response%\"*}"
+      echo "${response_tmp##*\"}"
+    fi
+}
 
-if [ "${auth_test_response_code}" != "200" ]; then
-    usage "You don't have access to the repository without a GitHub access token."
-fi
-
-echo 'download latest release data' >&2
-
-query="{\"query\": \"query { repository(owner: \\\"EdwarDDay\\\", name: \\\"kotlin-server-scripts\\\") { latestRelease { releaseAssets(name: \\\"scripting-host-release.tar.gz\\\", first: 1) { nodes { url } } } } }\" }"
-response="$(curl --request POST "${github_args[@]}" --fail --silent --url 'https://api.github.com/graphql' --data "$query")"
-response_tmp="${response%\"*}"
-url="${response_tmp##*\"}"
+case "$release_fetch_mode" in
+gh)
+  echo 'download latest release data via gh commandline tool' >&2
+  gh auth status >/dev/null || usage 'gh commandline tool is not setup. Please login via "gh auth login" or use --do-not-use-github-cli'
+  response="$(gh api graphql -F 'user=EdwarDDay' -F 'repo=kotlin-server-scripts' -F 'asset=scripting-host-release.tar.gz' -f "query=$query")"
+  url="$(extractUrlFromGraphqlQuery "$response")"
+  ;;
+curl-authenticated)
+  echo 'download latest release data via curl and graphql api' >&2
+  data="{
+  \"query\":\"$query\",
+  \"variables\":{
+    \"user\":\"EdwarDDay\",
+    \"repo\":\"kotlin-server-scripts\",
+    \"asset\":\"scripting-host-release.tar.gz\"
+  }
+  }"
+  response="$(curl --request POST "${github_args[@]}" --fail --silent --url 'https://api.github.com/graphql' --data "$data")"
+  url="$(extractUrlFromGraphqlQuery "$response")"
+  ;;
+# curl
+*)
+  echo 'download latest release data via github rest endpoint and jq' >&2
+  url="$(curl --request GET "${github_args[@]}" --fail --silent --url 'https://api.github.com/repos/EdwarDDay/kotlin-server-scripts/releases/latest' | jq --raw-output '.assets | map(select(.content_type == "application/gzip"))[0].url')"
+esac
 
 echo 'download binary' >&2
 
 archive_name='kss.tar.gz'
 
-curl --progress-bar --url "${url}" --output "${archive_name}" --fail
+curl --progress-bar --header 'Accept: application/octet-stream' --url "${url}" --output "${archive_name}" --fail
 
 echo 'extract binary' >&2
 

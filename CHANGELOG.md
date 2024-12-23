@@ -6,6 +6,7 @@
 
 - test for `@Repository` annotation
 - change logging configuration via properties file
+- test for install script
 
 ### Changed
 
