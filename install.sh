@@ -204,7 +204,7 @@ if [ "${release_fetch_mode}" == 'unknown' ]; then
 fi
 
 if [ "${release_fetch_mode}" == 'gh' ]; then
-  if gh auth status >/dev/null || [ -n "${GH_TOKEN:-}" ]; then
+  if ! (gh auth status >/dev/null) && [ -z "${GH_TOKEN:-}" ]; then
     usage "gh commandline tool is not setup. Please login via 'gh auth login', specify 'GH_TOKEN' or use '--release-fetch-mode curl' or '--release-fetch-mode curl-authenticated --token <GH PAT token>'"
   fi
 fi
