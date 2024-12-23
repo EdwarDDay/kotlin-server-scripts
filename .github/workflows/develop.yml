@@ -131,7 +131,7 @@ jobs:
           java-version: 17
 
       - name: install latest version
-        run: sudo ./install.sh
+        run: sudo --preserve-env ./install.sh
         env:
           GH_TOKEN: ${{ github.token }}
 
