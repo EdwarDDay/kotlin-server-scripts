@@ -142,7 +142,7 @@ jobs:
 
       - name: check install
         # 124 is cancelled after timeout
-        run:
+        run: |
           timeout 5s kss || exit_code=$?
           if [ "$exit_code" -ne 124 ]
           then 
