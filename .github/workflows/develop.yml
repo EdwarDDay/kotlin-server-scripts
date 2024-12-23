@@ -137,7 +137,8 @@ jobs:
 
       - name: setup socket
         run: |
-          mkdir -p /var/run/kss/
+          sudo mkdir -p /var/run/kss/
+          sudo chmod a+w /var/run/kss/
 
       - name: check install
         # 124 is cancelled after timeout
