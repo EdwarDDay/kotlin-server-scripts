@@ -135,6 +135,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
+      - name: setup socket
+        run: |
+          mkdir -p /var/run/kss/
+
       - name: check install
         # 124 is cancelled after timeout
         run:
