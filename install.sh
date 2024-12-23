@@ -252,7 +252,7 @@ function extractUrlFromGraphqlQuery() {
 case "$release_fetch_mode" in
 gh)
   echo 'download latest release data via gh commandline tool' >&2
-  gh auth status >/dev/null || usage 'gh commandline tool is not setup. Please login via "gh auth login" or use --do-not-use-github-cli'
+  gh auth status >/dev/null || usage "gh commandline tool is not setup. Please login via 'gh auth login' or use '--release-fetch-mode curl' or '--release-fetch-mode curl-authenticated --token <GH PAT token>'"
   response="$(gh api graphql -F 'user=EdwarDDay' -F 'repo=kotlin-server-scripts' -F 'asset=scripting-host-release.tar.gz' -f "query=$query")"
   url="$(extractUrlFromGraphqlQuery "$response")"
   ;;

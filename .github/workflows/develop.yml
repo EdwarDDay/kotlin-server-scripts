@@ -132,6 +132,8 @@ jobs:
 
       - name: install latest version
         run: sudo ./install.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: check install
         # 124 is cancelled after timeout
