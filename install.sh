@@ -145,12 +145,6 @@ while [[ $# -gt 0 ]]; do
       usage "unknown option ${value} for option --release-fetch-mode - please specify gh, curl-authenticated or curl"
     ;;
     esac
-    if [ "$value" ]; then
-      execution_directory="${value%/}/"
-      shift
-    else
-      usage 'the --release-fetch-mode option needs an argument'
-    fi
   ;;
   -s|--service-directory)
     if [ "$value" ]; then
