@@ -145,11 +145,16 @@ jobs:
           sudo mkdir -p /var/run/kss/
           sudo chmod a+w /var/run/kss/
 
+      - name: add timeout command to osx
+        if: ${{ startsWith(matrix.runner, 'macos') }}
+        run: |
+          brew install coreutils
+          sudo ln -s /usr/local/bin/gtimeout /usr/local/bin/timeout
+
       - name: check install
         # 124 is cancelled after timeout
         run: |
-          if [[ -n $(command -v timeout || echo '') ]]; then cmd=timeout; else cmd=gtimeout; fi
-          $cmd 5s kss || exit_code=$?
+          timeout 5s kss || exit_code=$?
           if [ "$exit_code" -ne 124 ]
           then
             echo "expected exit code 124 but was $exit_code"
