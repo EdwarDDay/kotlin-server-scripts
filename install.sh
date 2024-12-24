@@ -22,6 +22,7 @@ set -o pipefail
 if [[ -n $(command -v systemctl || echo '') ]]; then
   echo 'use systemctl default values' >&2
   service_binary='systemctl'
+  execution_directory='/usr/bin/'
   service_directory='/etc/systemd/system/'
   configuration_directory='/usr/share/kss/'
   log_directory=''
@@ -29,6 +30,7 @@ if [[ -n $(command -v systemctl || echo '') ]]; then
 elif [[ -n $(command -v launchctl || echo '') ]]; then
   echo 'use launchctl default values' >&2
   service_binary='launchctl'
+  execution_directory='/usr/local/bin/'
   service_directory='/Library/LaunchDaemons/'
   configuration_directory='/Library/Application Support/kss/'
   log_directory='/Library/Logs/'
@@ -36,6 +38,7 @@ elif [[ -n $(command -v launchctl || echo '') ]]; then
 else
   echo 'use empty default values' >&2
   service_binary=''
+  execution_directory='/usr/bin/'
   service_directory=''
   configuration_directory=''
   log_directory=''
@@ -57,7 +60,8 @@ function usageText {
   echo 'Options:'
   echo '-h/--help                    prints this usage'
   echo '-t/--token                   github token to use to download executables'
-  echo '-d/--directory[/usr/bin/]    directory for binary files'
+  echo "-d/--directory[$execution_directory]"
+  echo '                             directory for binary files'
   echo '-r/--release-fetch-mode      Options:'
   echo '                             gh - use authenticated Github commandline tool'
   echo '                             curl-authenticated - use curl authenticated with the token from the --token option'
@@ -84,7 +88,6 @@ function usage {
 }
 
 authorization_token=''
-execution_directory='/usr/bin/'
 service_user='www-data'
 release_fetch_mode_set='false'
 
