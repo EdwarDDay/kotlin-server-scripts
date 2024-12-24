@@ -118,8 +118,13 @@ jobs:
         if: ${{ failure() }}
         run: cat log.txt
 
-  test_install_script:
-    runs-on: ubuntu-24.04
+  test_install_script_defaults:
+    strategy:
+      matrix:
+        runner:
+          - ubuntu-24.04
+          - macos-14
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: checkout
         uses: actions/checkout@v4.2.2
@@ -145,7 +150,7 @@ jobs:
         run: |
           timeout 5s kss || exit_code=$?
           if [ "$exit_code" -ne 124 ]
-          then 
+          then
             echo "expected exit code 124 but was $exit_code"
             exit "$exit_code"
           fi
