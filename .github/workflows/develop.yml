@@ -148,7 +148,8 @@ jobs:
       - name: check install
         # 124 is cancelled after timeout
         run: |
-          timeout 5s kss || exit_code=$?
+          if [[ -n $(command -v timeout || echo '') ]]; then cmd=timeout; else cmd=gtimeout; fi
+          $cmd 5s kss || exit_code=$?
           if [ "$exit_code" -ne 124 ]
           then
             echo "expected exit code 124 but was $exit_code"
