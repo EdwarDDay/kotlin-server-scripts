@@ -157,9 +157,11 @@ jobs:
           then
             echo 'config_dir=/usr/share/kss/' >> $GITHUB_OUTPUT
             echo 'start_cmd=systemctl start kss' >> $GITHUB_OUTPUT
+            echo 'user=www-data' >> $GITHUB_OUTPUT
           else
             echo 'config_dir=/Library/Application Support/kss/' >> $GITHUB_OUTPUT
             echo 'start_cmd=launchctl load /Library/LaunchDaemons/kss.plist' >> $GITHUB_OUTPUT
+            echo 'user=_www' >> $GITHUB_OUTPUT
           fi
 
       - name: Start kss
@@ -175,7 +177,7 @@ jobs:
         id: start_ngingx
         with:
           conf-file-text: |
-            user www-data;
+            user ${{ steps.runner_config.outputs.user }};
             worker_processes 1;
             events {
               worker_connections 1024;
