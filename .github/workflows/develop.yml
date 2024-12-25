@@ -167,7 +167,7 @@ jobs:
           echo "logging.logback.configurationFile=kss.logback.xml" >> kss.properties
           mv kss.logback.xml '${{ steps.runner_config.outputs.config_dir }}'
           mv kss.properties '${{ steps.runner_config.outputs.config_dir }}'
-          ${{ steps.runner_config.outputs.start_cmd }}
+          sudo ${{ steps.runner_config.outputs.start_cmd }}
 
       - name: Start nginx
         uses: nyurik/action-setup-nginx@v1.1
