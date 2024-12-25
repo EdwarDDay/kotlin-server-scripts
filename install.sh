@@ -156,6 +156,7 @@ while [[ $# -gt 0 ]]; do
       usage "unknown option ${value} for option --release-fetch-mode - please specify gh, curl-authenticated or curl"
     ;;
     esac
+    shift
   ;;
   -s|--service-directory)
     if [ "$value" ]; then
