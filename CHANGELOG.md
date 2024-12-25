@@ -12,6 +12,7 @@
 ### Changed
 
 - updated various dependencies
+- default user for macos set to _www
 
 ## [0.4.0]
 

@@ -27,6 +27,7 @@ if [[ -n $(command -v systemctl || echo '') ]]; then
   configuration_directory='/usr/share/kss/'
   log_directory=''
   service_file='kss.service'
+  service_user='www-data'
 elif [[ -n $(command -v launchctl || echo '') ]]; then
   echo 'use launchctl default values' >&2
   service_binary='launchctl'
@@ -35,6 +36,7 @@ elif [[ -n $(command -v launchctl || echo '') ]]; then
   configuration_directory='/Library/Application Support/kss/'
   log_directory='/Library/Logs/'
   service_file='kss.plist'
+  service_user='_www'
 else
   echo 'use empty default values' >&2
   service_binary=''
@@ -43,6 +45,7 @@ else
   configuration_directory=''
   log_directory=''
   service_file='kss.service'
+  service_user=''
 fi
 
 if [[ -n $(command -v gh || echo '') ]]; then
@@ -73,7 +76,7 @@ function usageText {
   echo '                             directory for configuration files'
   echo "-l/--log-directory[$log_directory]"
   echo '                             directory for log files (only used in MacOS)'
-  echo '-u/--user[www-data]          user which runs the service process'
+  echo "-u/--user[$service_user]          user which runs the service process"
 }
 
 function usage {
@@ -89,7 +92,6 @@ function usage {
 }
 
 authorization_token=''
-service_user='www-data'
 release_fetch_mode_set='false'
 
 while [[ $# -gt 0 ]]; do

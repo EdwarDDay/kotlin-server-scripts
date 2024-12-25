@@ -11,7 +11,6 @@ archive, installs the executable and creates and enables a system service.
 curl 'https://raw.githubusercontent.com/EdwarDDay/kotlin-server-scripts/main/install.sh' --output install.sh
 chmod u+x install.sh
 ./install.sh # admin privileges might be needed 
-./install.sh --user '_www' # for MacOS
 ```
 
 The `install.sh` script will by default save the executable in the `/usr/bin/` directory, creates system service file
