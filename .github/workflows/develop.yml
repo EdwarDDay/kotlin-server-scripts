@@ -120,6 +120,7 @@ jobs:
 
   test_install_via_script:
     strategy:
+      fail-fast: false
       matrix:
         runner:
           - ubuntu-24.04
@@ -165,8 +166,8 @@ jobs:
         run: |
           cp .github/config/logback.xml kss.logback.xml
           echo "logging.logback.configurationFile=kss.logback.xml" >> kss.properties
-          mv kss.logback.xml '${{ steps.runner_config.outputs.config_dir }}'
-          mv kss.properties '${{ steps.runner_config.outputs.config_dir }}'
+          sudo mv kss.logback.xml '${{ steps.runner_config.outputs.config_dir }}'
+          sudo mv kss.properties '${{ steps.runner_config.outputs.config_dir }}'
           sudo ${{ steps.runner_config.outputs.start_cmd }}
 
       - name: Start nginx
