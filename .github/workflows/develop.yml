@@ -216,6 +216,14 @@ jobs:
         if: ${{ failure() }}
         run: cat '${{ steps.runner_config.outputs.config_dir }}log.txt'
 
+      - name: Print macos kss process logs
+        if: ${{ failure() && startsWith(matrix.runner, 'macos') }}
+        run: |
+          echo "log"
+          cat '/Library/Logs/kss.log'
+          echo "error log"
+          cat '/Library/Logs/kss-error.log'
+
   test_install_script_defaults:
     strategy:
       matrix:
