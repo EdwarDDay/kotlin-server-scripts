@@ -16,6 +16,7 @@
 
 package net.edwardday.serverscript.scripthost
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -62,6 +63,36 @@ suspend fun main() {
     val loggingFile = properties.getProperty("logging.logback.configurationFile").orEmpty()
     if (loggingFile.isNotEmpty() && File(loggingFile).exists()) {
         System.setProperty("logback.configurationFile", loggingFile)
+    }
+
+    val logger = KotlinLogging.logger {}
+
+    val mavenDependenciesSettings = properties.getProperty("dependencies.maven.settingsFile").orEmpty()
+    val mavenDependenciesHome = properties.getProperty("dependencies.maven.homeDirectory").orEmpty()
+    if (mavenDependenciesSettings.isNotEmpty() && File(mavenDependenciesSettings).exists()) {
+        if (mavenDependenciesHome.isNotEmpty()) {
+            logger.warn { "'dependencies.maven.settingsFile' overwrites 'dependencies.maven.homeDirectory' setting." }
+        }
+        System.setProperty("org.apache.maven.user-settings", mavenDependenciesSettings)
+    } else {
+        val mavenDependenciesHomeDirectory = File(mavenDependenciesHome)
+        if (mavenDependenciesHome.isNotEmpty() && mavenDependenciesHomeDirectory.isDirectory()) {
+            if (mavenDependenciesHomeDirectory.canWrite()) {
+                val settingsFile = File(mavenDependenciesHomeDirectory, "settings.xml")
+                val repositoryDirectory = File(mavenDependenciesHomeDirectory, "repository")
+                repositoryDirectory.mkdir()
+                settingsFile.printWriter().use { writer ->
+                    writer.println("""<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"""")
+                    writer.println("""  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"""")
+                    writer.println("""  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">""")
+                    writer.println("""  <localRepository>${repositoryDirectory.absolutePath}</localRepository>""")
+                    writer.println("""</settings>""")
+                }
+                System.setProperty("org.apache.maven.user-settings", settingsFile.absolutePath)
+            } else {
+                logger.warn { "User can't write in ${mavenDependenciesHomeDirectory.absolutePath}" }
+            }
+        }
     }
     val socket = properties.getProperty("socket.address") ?: "unix:/var/run/kss/kss.sock"
     val maxConnections = properties.getProperty("connections.max")?.toIntOrNull() ?: 4

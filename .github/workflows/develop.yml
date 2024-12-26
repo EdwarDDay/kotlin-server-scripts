@@ -166,9 +166,11 @@ jobs:
 
       - name: Start kss
         run: |
-          cp .github/config/logback.xml kss.logback.xml
-          echo "logging.logback.configurationFile=kss.logback.xml" >> kss.properties
-          sudo mv kss.logback.xml '${{ steps.runner_config.outputs.config_dir }}'
+          sudo cp .github/config/logback.xml '${{ steps.runner_config.outputs.config_dir }}kss.logback.xml'
+          echo "logging.logback.configurationFile=${{ steps.runner_config.outputs.config_dir }kss.logback.xml" >> kss.properties
+          echo "dependencies.maven.homeDirectory=${{ steps.runner_config.outputs.config_dir }.m2" >> kss.properties
+          sudo mkdir '${{ steps.runner_config.outputs.config_dir }}.m2'
+          sudo chown '${{ steps.runner_config.outputs.user }}' '${{ steps.runner_config.outputs.config_dir }}.m2'
           sudo mv kss.properties '${{ steps.runner_config.outputs.config_dir }}'
           sudo ${{ steps.runner_config.outputs.start_cmd }}
 
