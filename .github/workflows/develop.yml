@@ -169,9 +169,12 @@ jobs:
           sudo cp .github/config/logback.xml '${{ steps.runner_config.outputs.config_dir }}kss.logback.xml'
           echo "logging.logback.configurationFile=${{ steps.runner_config.outputs.config_dir }}kss.logback.xml" >> kss.properties
           echo "dependencies.maven.homeDirectory=${{ steps.runner_config.outputs.config_dir }}.m2" >> kss.properties
+          sudo chown '${{ steps.runner_config.outputs.user }}' '${{ steps.runner_config.outputs.config_dir }}'
           sudo mkdir '${{ steps.runner_config.outputs.config_dir }}.m2'
           sudo chown '${{ steps.runner_config.outputs.user }}' '${{ steps.runner_config.outputs.config_dir }}.m2'
           sudo mv kss.properties '${{ steps.runner_config.outputs.config_dir }}'
+          sudo mkdir /var/run/kss/
+          sudo chown '${{ steps.runner_config.outputs.user }}' /var/run/kss/
           sudo ${{ steps.runner_config.outputs.start_cmd }}
 
       - name: Start nginx
@@ -219,10 +222,16 @@ jobs:
       - name: Print macos kss process logs
         if: ${{ failure() && startsWith(matrix.runner, 'macos') }}
         run: |
-          echo "log"
-          cat '/Library/Logs/kss.log'
-          echo "error log"
-          cat '/Library/Logs/kss-error.log'
+          if [ -f '/Library/Logs/kss.log' ]
+          then
+            echo 'log'
+            cat '/Library/Logs/kss.log'
+          fi
+          if [ -f '/Library/Logs/kss-error.log' ]
+          then
+            echo 'error log'
+            cat '/Library/Logs/kss-error.log'
+          fi
 
   test_install_script_defaults:
     strategy:
