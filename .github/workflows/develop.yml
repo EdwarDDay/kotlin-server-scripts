@@ -145,11 +145,6 @@ jobs:
       - name: install latest version
         run: sudo --preserve-env ./install.sh --release-fetch-mode archive=scripting-host-release.tar.gz
 
-      - name: setup socket
-        run: |
-          sudo mkdir -p /var/run/kss/
-          sudo chmod a+w /var/run/kss/
-
       - name: setup runner config
         id: runner_config
         run: |
@@ -164,6 +159,11 @@ jobs:
             echo 'user=_www' >> $GITHUB_OUTPUT
           fi
 
+      - name: setup socket
+        run: |
+          sudo mkdir -p /var/run/kss/
+          sudo chown '${{ steps.runner_config.outputs.user }}' /var/run/kss/
+
       - name: Start kss
         run: |
           sudo cp .github/config/logback.xml '${{ steps.runner_config.outputs.config_dir }}kss.logback.xml'
@@ -173,8 +173,6 @@ jobs:
           sudo mkdir '${{ steps.runner_config.outputs.config_dir }}.m2'
           sudo chown '${{ steps.runner_config.outputs.user }}' '${{ steps.runner_config.outputs.config_dir }}.m2'
           sudo mv kss.properties '${{ steps.runner_config.outputs.config_dir }}'
-          sudo mkdir /var/run/kss/
-          sudo chown '${{ steps.runner_config.outputs.user }}' /var/run/kss/
           sudo ${{ steps.runner_config.outputs.start_cmd }}
 
       - name: Start nginx
