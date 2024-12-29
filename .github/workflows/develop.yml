@@ -155,7 +155,7 @@ jobs:
             echo 'user=www-data' >> $GITHUB_OUTPUT
           else
             echo 'config_dir=/Library/Application Support/kss/' >> $GITHUB_OUTPUT
-            echo 'start_cmd=launchctl load /Library/LaunchDaemons/kss.plist' >> $GITHUB_OUTPUT
+            echo 'start_cmd=launchctl load /Library/LaunchDaemons/kss.plist && launchctl kickstart /Library/LaunchDaemons/kss.plist' >> $GITHUB_OUTPUT
             echo 'user=_www' >> $GITHUB_OUTPUT
           fi
 
