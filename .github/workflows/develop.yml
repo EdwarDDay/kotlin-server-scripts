@@ -137,6 +137,13 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
+      - name: Link to default JVMs
+        if: ${{ startsWith(matrix.runner, 'macos') }}
+        run: |
+          java_dir="${JAVA_HOME%/Contents/Home}"
+          echo "java dir: $java_dir"
+          sudo ln -s "${java_dir}" /Library/Java/JavaVirtualMachines/jdk-temurin-17
+
       - name: Download build
         uses: actions/download-artifact@v4.1.8
         with:
@@ -249,13 +256,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
-
-      - name: Link to default JVMs
-        if: ${{ startsWith(matrix.runner, 'macos') }}
-        run: |
-          java_dir="${JAVA_HOME%/Contents/Home}"
-          echo "java dir: $java_dir"
-          sudo ln -s "${java_dir}" /Library/Java/JavaVirtualMachines/jdk-temurin-17
 
       - name: install latest version
         run: sudo --preserve-env ./install.sh
