@@ -17,11 +17,6 @@
     <key>WorkingDirectory</key>
     <string>{{WORKING_DIRECTORY}}</string>
 
-    <key>EnvironmentVariables</key>
-    <dict>
-      {{JAVA_ENV_HOME_ENTRY}}
-    </dict>
-
     <key>KeepAlive</key>
     <true/>
 

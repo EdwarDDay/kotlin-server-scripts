@@ -17,7 +17,7 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v4.6.0
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: 17
 
       - name: Setup Gradle
@@ -44,7 +44,7 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v4.6.0
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: 17
 
       - name: Download build
@@ -134,7 +134,7 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v4.6.0
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: 17
 
       - name: Download build
@@ -222,7 +222,6 @@ jobs:
         run: |
           if [ -f '/Library/Logs/kss.log' ]
           then
-            echo 'log'
             cat '/Library/Logs/kss.log'
           fi
 
@@ -231,7 +230,6 @@ jobs:
         run: |
           if [ -f '/Library/Logs/kss-error.log' ]
           then
-            echo 'error log'
             cat '/Library/Logs/kss-error.log'
           fi
 
@@ -249,8 +247,15 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v4.6.0
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: 17
+
+      - name: Link to default JVMs
+        if: ${{ startsWith(matrix.runner, 'macos') }}
+        run: |
+          java_dir="${JAVA_HOME%/Contents/Home}"
+          echo "java dir: $java_dir"
+          sudo ln -s "${java_dir}" /Library/Java/JavaVirtualMachines/jdk-temurin-17
 
       - name: install latest version
         run: sudo --preserve-env ./install.sh

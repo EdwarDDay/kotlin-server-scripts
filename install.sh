@@ -314,16 +314,10 @@ if [[ -n "${service_directory}" ]]; then
   echo 'configure service' >&2
   # escape sed escape char
   service_user="${service_user/|/\\\|}"
-  if [ -n "${JAVA_HOME:-}" ]; then
-    java_launchd_plist_entry="<key>JAVA_HOME</key>\n    <string>${JAVA_HOME:-}</string>"
-  else
-    java_launchd_plist_entry=''
-  fi
   tar --extract --gunzip --file "${archive_name}" --to-stdout "scripting-host-release/service/$service_file" |\
    sed "s|{{DIRECTORY}}|${execution_directory}|g" | \
    sed "s|{{WORKING_DIRECTORY}}|${configuration_directory}|g" | \
    sed "s|{{LOG_DIRECTORY}}|${log_directory}|g" | \
-   sed "s|{{JAVA_ENV_HOME_ENTRY}}|${java_launchd_plist_entry}|g" | \
    sed "s|{{USER}}|${service_user}|g" \
    > "$service_directory$service_file"
   case $service_binary in
