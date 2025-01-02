@@ -225,6 +225,10 @@ jobs:
             echo 'log'
             cat '/Library/Logs/kss.log'
           fi
+
+      - name: Print macos kss error logs
+        if: ${{ failure() && startsWith(matrix.runner, 'macos') }}
+        run: |
           if [ -f '/Library/Logs/kss-error.log' ]
           then
             echo 'error log'
