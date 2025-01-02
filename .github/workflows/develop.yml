@@ -137,10 +137,9 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Print JVM info
-        run: |
-          echo "Path: $PATH"
-          ls -lisa "$JAVA_HOME/bin"
+      - name: Set launchd path
+        if: ${{ startsWith(matrix.runner, 'macos') }}
+        run: sudo launchctl config system path "$PATH"
 
       - name: Download build
         uses: actions/download-artifact@v4.1.8
