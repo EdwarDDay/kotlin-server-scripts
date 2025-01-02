@@ -179,6 +179,12 @@ jobs:
           sudo mv kss.properties '${{ steps.runner_config.outputs.config_dir }}'
           sudo ${{ steps.runner_config.outputs.start_cmd }}
 
+      - name: Print macos daemon state
+        if: ${{ startsWith(matrix.runner, 'macos') }}
+        run: |
+          sleep 2
+          sudo launchtl print system/net.edwardday.kss
+
       - name: Start nginx
         uses: nyurik/action-setup-nginx@v1.1
         id: start_ngingx
