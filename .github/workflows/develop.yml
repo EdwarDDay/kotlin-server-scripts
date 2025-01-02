@@ -139,9 +139,7 @@ jobs:
 
       - name: Set launchd path
         if: ${{ startsWith(matrix.runner, 'macos') }}
-        run: |
-          sudo launchctl config system path "$PATH"
-          sudo launchctl reboot system
+        run: sudo launchctl setenv PATH "$PATH"
 
       - name: Download build
         uses: actions/download-artifact@v4.1.8
