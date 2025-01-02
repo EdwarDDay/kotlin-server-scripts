@@ -183,7 +183,7 @@ jobs:
         if: ${{ startsWith(matrix.runner, 'macos') }}
         run: |
           sleep 2
-          sudo launchtl print system/net.edwardday.kss
+          sudo launchctl print system/net.edwardday.kss
 
       - name: Start nginx
         uses: nyurik/action-setup-nginx@v1.1
