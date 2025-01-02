@@ -334,10 +334,9 @@ if [[ -n "${service_directory}" ]]; then
     sudo touch "${log_directory}kss-error.log"
     sudo chown "$service_user" "${log_directory}kss.log" "${log_directory}kss-error.log"
     sudo chmod 600 "$service_directory$service_file"
-    launchctl enable system/net.edwardday.kss
     echo 'The launch daemon is enabled. Run'
     echo ''
-    echo 'launchctl bootstrap system net.edwardday.kss'
+    echo "launchctl load -w $service_directory$service_file"
     echo ''
     echo 'to start the daemon'
     ;;
