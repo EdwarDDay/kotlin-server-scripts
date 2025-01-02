@@ -5,9 +5,6 @@
     <key>Label</key>
     <string>net.edwardday.kss</string>
 
-    <key>ProcessType</key>
-    <string>Background</string>
-
     <key>Program</key>
     <string>{{DIRECTORY}}kss</string>
 
@@ -20,14 +17,8 @@
     <key>WorkingDirectory</key>
     <string>{{WORKING_DIRECTORY}}</string>
 
-    <key>RunAtLoad</key>
-    <true/>
-
     <key>KeepAlive</key>
-    <dict>
-        <key>Crashed</key>
-        <true/>
-    </dict>
+    <true/>
 
     <key>UserName</key>
     <string>{{USER}}</string>
