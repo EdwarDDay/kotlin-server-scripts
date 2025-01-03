@@ -3,5 +3,8 @@
   "extends": [
     "config:recommended"
   ],
+  "kotlin-script": {
+    "fileMatch": ["^.+\\.server\\.kts$"]
+  },
   "labels": ["dependencies"]
 }
