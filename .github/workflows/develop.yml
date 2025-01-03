@@ -142,6 +142,7 @@ jobs:
         run: |
           dir="$JAVA_HOME/bin"
           while [ "$dir" != "/" ]; do echo "ls -lisa $dir"; ls -lisa "$dir"; dir=$(dirname "$dir"); done
+          chmod o+rx "$HOME"
           if test -x "$JAVA_HOME/bin/java"; then echo '$JAVA_HOME/bin/java is executable'; else echo '$JAVA_HOME/bin/java is not executable'; fi
           if sudo -u _www test -x "$JAVA_HOME/bin/java"; then echo '$JAVA_HOME/bin/java is executable for _www'; else echo '$JAVA_HOME/bin/java is not executable for _www'; fi
           sudo launchctl setenv JAVA_HOME "$JAVA_HOME"
