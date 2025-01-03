@@ -17,7 +17,7 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v4.6.0
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: 17
 
       - name: Setup Gradle
@@ -44,7 +44,7 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v4.6.0
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: 17
 
       - name: Download build
@@ -118,6 +118,129 @@ jobs:
         if: ${{ failure() }}
         run: cat log.txt
 
+  test_install_via_script:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - ubuntu-24.04
+          - macos-14
+    runs-on: ${{ matrix.runner }}
+    needs: build
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4.6.0
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      # HOME directory needs to be accessible by _www, so the java executable can be used
+      # not needed for linux, because JDK is not put in user directory
+      - name: Set launchd path
+        if: ${{ startsWith(matrix.runner, 'macos') }}
+        run: |
+          chmod o+rx "$HOME"
+          sudo launchctl setenv JAVA_HOME "$JAVA_HOME"
+
+      - name: Download build
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: release-artifact
+
+      - name: install latest version
+        run: sudo ./install.sh --release-fetch-mode archive=scripting-host-release.tar.gz
+
+      - name: setup runner config
+        id: runner_config
+        run: |
+          if [[ '${{ matrix.runner }}' == ubuntu* ]]
+          then
+            echo 'config_dir=/usr/share/kss/' >> $GITHUB_OUTPUT
+            echo 'start_cmd=systemctl start kss' >> $GITHUB_OUTPUT
+            echo 'user=www-data' >> $GITHUB_OUTPUT
+          else
+            echo 'config_dir=/Library/Application Support/kss/' >> $GITHUB_OUTPUT
+            echo 'start_cmd=launchctl load -w /Library/LaunchDaemons/kss.plist' >> $GITHUB_OUTPUT
+            echo 'user=_www' >> $GITHUB_OUTPUT
+          fi
+
+      - name: setup socket
+        run: |
+          sudo mkdir -p /var/run/kss/
+          sudo chown '${{ steps.runner_config.outputs.user }}' /var/run/kss/
+
+      - name: Start kss
+        run: |
+          sudo cp .github/config/logback.xml '${{ steps.runner_config.outputs.config_dir }}kss.logback.xml'
+          echo "logging.logback.configurationFile=${{ steps.runner_config.outputs.config_dir }}kss.logback.xml" >> kss.properties
+          echo "dependencies.maven.homeDirectory=${{ steps.runner_config.outputs.config_dir }}.m2" >> kss.properties
+          sudo chown '${{ steps.runner_config.outputs.user }}' '${{ steps.runner_config.outputs.config_dir }}'
+          sudo mkdir '${{ steps.runner_config.outputs.config_dir }}.m2'
+          sudo chown '${{ steps.runner_config.outputs.user }}' '${{ steps.runner_config.outputs.config_dir }}.m2'
+          sudo mv kss.properties '${{ steps.runner_config.outputs.config_dir }}'
+          sudo ${{ steps.runner_config.outputs.start_cmd }}
+
+      - name: Start nginx
+        uses: nyurik/action-setup-nginx@v1.1
+        id: start_ngingx
+        with:
+          conf-file-text: |
+            user ${{ steps.runner_config.outputs.user }};
+            worker_processes 1;
+            events {
+              worker_connections 1024;
+            }
+            http {
+              include mime.types;
+              default_type application/octet-stream;
+              sendfile on;
+              keepalive_timeout 65;
+              server {
+                listen 8080;
+                server_name localhost;
+                location ~ ^(.*)\.kts(\?.*)?$ {
+                  root html;
+                  try_files \$1.server.kts =404;
+                  include fastcgi_params;
+                  fastcgi_pass unix:/var/run/kss/kss.sock;
+                }
+              }
+            }
+
+      - name: run tests
+        run: ./.github/scripts/test.sh "${{ steps.start_ngingx.outputs.html-dir }}"
+
+      - name: Print nginx error logs
+        if: ${{ failure() }}
+        run: cat "${{ steps.start_ngingx.outputs.error-log }}"
+
+      - name: Print nginx access logs
+        if: ${{ failure() }}
+        run: cat "${{ steps.start_ngingx.outputs.access-log }}"
+
+      - name: Print kss process logs
+        if: ${{ failure() }}
+        run: cat '${{ steps.runner_config.outputs.config_dir }}log.txt'
+
+      - name: Print macos kss process logs
+        if: ${{ failure() && startsWith(matrix.runner, 'macos') }}
+        run: |
+          if [ -f '/Library/Logs/kss.log' ]
+          then
+            cat '/Library/Logs/kss.log'
+          fi
+
+      - name: Print macos kss error logs
+        if: ${{ failure() && startsWith(matrix.runner, 'macos') }}
+        run: |
+          if [ -f '/Library/Logs/kss-error.log' ]
+          then
+            cat '/Library/Logs/kss-error.log'
+          fi
+
   test_install_script_defaults:
     strategy:
       matrix:
@@ -132,7 +255,7 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v4.6.0
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: 17
 
       - name: install latest version

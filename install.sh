@@ -27,6 +27,7 @@ if [[ -n $(command -v systemctl || echo '') ]]; then
   configuration_directory='/usr/share/kss/'
   log_directory=''
   service_file='kss.service'
+  service_user='www-data'
 elif [[ -n $(command -v launchctl || echo '') ]]; then
   echo 'use launchctl default values' >&2
   service_binary='launchctl'
@@ -35,6 +36,7 @@ elif [[ -n $(command -v launchctl || echo '') ]]; then
   configuration_directory='/Library/Application Support/kss/'
   log_directory='/Library/Logs/'
   service_file='kss.plist'
+  service_user='_www'
 else
   echo 'use empty default values' >&2
   service_binary=''
@@ -43,6 +45,7 @@ else
   configuration_directory=''
   log_directory=''
   service_file='kss.service'
+  service_user=''
 fi
 
 if [[ -n $(command -v gh || echo '') ]]; then
@@ -66,13 +69,14 @@ function usageText {
   echo '                             gh - use authenticated Github commandline tool'
   echo '                             curl-authenticated - use curl authenticated with the token from the --token option'
   echo '                             curl - use curl without token - needs jq to parse rest response'
+  echo '                             archive=<archive> - use tar archive as release'
   echo "-s/--service-directory[$service_directory]"
   echo '                             directory for service files'
   echo "-c/--configuration-directory[$configuration_directory]"
   echo '                             directory for configuration files'
   echo "-l/--log-directory[$log_directory]"
   echo '                             directory for log files (only used in MacOS)'
-  echo '-u/--user[www-data]          user which runs the service process'
+  echo "-u/--user[$service_user]          user which runs the service process"
 }
 
 function usage {
@@ -88,7 +92,6 @@ function usage {
 }
 
 authorization_token=''
-service_user='www-data'
 release_fetch_mode_set='false'
 
 while [[ $# -gt 0 ]]; do
@@ -141,6 +144,13 @@ while [[ $# -gt 0 ]]; do
         usage '--release-fetch-mode set to curl but can'\''t find jq command, which is needed to parse the REST API'
       fi
       ;;
+    archive=*)
+      release_fetch_mode="archive"
+      archive_file="${value:8}"
+      if [ ! -f "$archive_file" ]; then
+        usage "couldn't find archive file '$archive_file'"
+      fi
+      ;;
     '')
       usage 'the --release-fetch-mode option needs an argument'
       ;;
@@ -148,6 +158,7 @@ while [[ $# -gt 0 ]]; do
       usage "unknown option ${value} for option --release-fetch-mode - please specify gh, curl-authenticated or curl"
     ;;
     esac
+    shift
   ;;
   -s|--service-directory)
     if [ "$value" ]; then
@@ -256,11 +267,23 @@ function extractUrlFromGraphqlQuery() {
     fi
 }
 
+function downloadBinary() {
+  echo 'download binary' >&2
+  curl --progress-bar --header 'Accept: application/octet-stream' --url "${url}" --output "${archive_name}" --fail
+}
+
+archive_name='kss.tar.gz'
+
 case "$release_fetch_mode" in
+archive)
+  echo "use release archive from file $archive_file" >&2
+  cp "$archive_file" "$archive_name"
+  ;;
 gh)
   echo 'download latest release data via gh commandline tool' >&2
   response="$(gh api graphql -F 'user=EdwarDDay' -F 'repo=kotlin-server-scripts' -F 'asset=scripting-host-release.tar.gz' -f "query=$query")"
   url="$(extractUrlFromGraphqlQuery "$response")"
+  downloadBinary
   ;;
 curl-authenticated)
   echo 'download latest release data via curl and graphql api' >&2
@@ -274,18 +297,14 @@ curl-authenticated)
   }"
   response="$(curl --request POST "${github_args[@]}" --fail --silent --url 'https://api.github.com/graphql' --data "$data")"
   url="$(extractUrlFromGraphqlQuery "$response")"
+  downloadBinary
   ;;
 # curl
 *)
   echo 'download latest release data via github rest endpoint and jq' >&2
   url="$(curl --request GET "${github_args[@]}" --fail --silent --url 'https://api.github.com/repos/EdwarDDay/kotlin-server-scripts/releases/latest' | jq --raw-output '.assets | map(select(.content_type == "application/gzip"))[0].url')"
+  downloadBinary
 esac
-
-echo 'download binary' >&2
-
-archive_name='kss.tar.gz'
-
-curl --progress-bar --header 'Accept: application/octet-stream' --url "${url}" --output "${archive_name}" --fail
 
 echo 'extract binary' >&2
 
@@ -311,9 +330,13 @@ if [[ -n "${service_directory}" ]]; then
     echo 'to start the service'
     ;;
   launchctl)
+    sudo touch "${log_directory}kss.log"
+    sudo touch "${log_directory}kss-error.log"
+    sudo chown "$service_user" "${log_directory}kss.log" "${log_directory}kss-error.log"
+    sudo chmod 600 "$service_directory$service_file"
     echo 'The launch daemon is enabled. Run'
     echo ''
-    echo "launchctl load $service_directory$service_file"
+    echo "launchctl load -w $service_directory$service_file"
     echo ''
     echo 'to start the daemon'
     ;;

@@ -7,10 +7,13 @@
 - test for `@Repository` annotation
 - change logging configuration via properties file
 - test for install script
+- option to install via release archive file
+- option to set local maven repository settings
 
 ### Changed
 
 - updated various dependencies
+- default user for macos set to _www
 
 ## [0.4.0]
 
