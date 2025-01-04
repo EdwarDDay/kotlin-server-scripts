@@ -307,13 +307,14 @@ esac
 
 echo 'extract binary' >&2
 
-tar --extract --gunzip --file "${archive_name}" --strip-components 2 --directory "${execution_directory}" 'scripting-host-release/bin/'
+archiveInternalName="$(tar --list --file "${archive_name}" | head -n 1)"
+tar --extract --gunzip --file "${archive_name}" --strip-components 2 --directory "${execution_directory}" "${archiveInternalName}bin/"
 
 if [[ -n "${service_directory}" ]]; then
   echo 'configure service' >&2
   # escape sed escape char
   service_user="${service_user/|/\\\|}"
-  tar --extract --gunzip --file "${archive_name}" --to-stdout "scripting-host-release/service/$service_file" |\
+  tar --extract --gunzip --file "${archive_name}" --to-stdout "${archiveInternalName}service/$service_file" |\
    sed "s|{{DIRECTORY}}|${execution_directory}|g" | \
    sed "s|{{WORKING_DIRECTORY}}|${configuration_directory}|g" | \
    sed "s|{{LOG_DIRECTORY}}|${log_directory}|g" | \
