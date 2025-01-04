@@ -26,7 +26,13 @@ jobs:
       - name: Create info variables
         id: variables
         run: |
-          echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+          gradleVersion="$(cat gradle.properties | sed -n 's/version=//p')"
+          gitVersion="${GITHUB_REF#refs/*/}"
+          if [ "$gradleVersion" != "$gitVersion" ]; then 
+            echo "gradle properties version ($gradleVersion) doesn't match git tag version ($gitVersion)"
+            exit 1
+          fi
+          echo "version=$gitVersion" >> $GITHUB_OUTPUT
 
       - name: Get Changelog
         id: changelog

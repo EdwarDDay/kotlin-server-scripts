@@ -9,6 +9,7 @@
 - test for install script
 - option to install via release archive file
 - option to set local maven repository settings
+- version and help command line option
 
 ### Changed
 

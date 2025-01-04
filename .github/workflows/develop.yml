@@ -55,6 +55,16 @@ jobs:
       - name: Untar release artifact
         run: tar --extract --gunzip --file scripting-host-release.tar.gz
 
+      - name: Test version output
+        timeout-minutes: 1
+        run: |
+          version="$(cat gradle.properties | sed -n 's/version=//p')"
+          hostVersion=$(./scripting-host-release/bin/kss --version)
+          if [ "$hostVersion" != "version: $version" ]; then
+            echo "host version ($hostVersion) doesn't match gradle properties version ($version)"
+            exit 1
+          fi
+
       - name: Start nginx
         uses: nyurik/action-setup-nginx@v1.1
         id: start_ngingx

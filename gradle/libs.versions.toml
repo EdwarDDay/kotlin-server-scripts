@@ -1,4 +1,5 @@
 [versions]
+clikt = "5.0.2"
 kotlin = "2.1.0"
 kotlinx-coroutines = "1.10.1"
 logback = "1.5.15"
@@ -6,6 +7,7 @@ oshai-logging = "7.0.3"
 okio = "3.9.1"
 
 [libraries]
+clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 kotlin-scripting-common = { module = "org.jetbrains.kotlin:kotlin-scripting-common", version.ref = "kotlin" }
 kotlin-scripting-dependencies = { module = "org.jetbrains.kotlin:kotlin-scripting-dependencies", version.ref = "kotlin" }
 kotlin-scripting-dependencies-maven = { module = "org.jetbrains.kotlin:kotlin-scripting-dependencies-maven", version.ref = "kotlin" }
