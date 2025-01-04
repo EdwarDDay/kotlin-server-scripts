@@ -117,8 +117,7 @@ application {
     executableDir = ""
 }
 
-val emitVersionFile by tasks.registering {
-    group = "build"
+val processResourceVersionFile by tasks.registering {
     inputs.property("version", project.version)
     val outputFile = layout.buildDirectory.file("resources/main/version.properties")
     outputs.file(outputFile)
@@ -130,6 +129,6 @@ val emitVersionFile by tasks.registering {
     }
 }
 
-tasks.classes {
-    dependsOn(emitVersionFile)
+tasks.processResources {
+    dependsOn(processResourceVersionFile)
 }
