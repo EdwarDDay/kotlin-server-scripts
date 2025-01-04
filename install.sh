@@ -342,7 +342,7 @@ if [[ -n "${service_directory}" ]]; then
     ;;
   esac
 
-  tar --extract --gunzip --file "${archive_name}" --strip-components 2 --directory "${configuration_directory}" 'scripting-host-release/config/'
+  tar --extract --gunzip --file "${archive_name}" --strip-components 2 --directory "${configuration_directory}" "${archiveInternalName}config/"
   echo "A sample configuration is in '${configuration_directory}'. Remove the '.sample' extension and edit it as you see fit."
   echo "A sample logging file is in '${configuration_directory}'. Remove the '.sample' extension, reference it in the configuration and edit it as you see fit."
 fi
