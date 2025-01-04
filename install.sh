@@ -307,9 +307,7 @@ esac
 
 echo 'extract binary' >&2
 
-tar --list --file "${archive_name}" --exclude="*/?*" >&2
 archiveInternalName="$(tar --list --file "${archive_name}" --exclude="*/?*")"
-echo "internal name: $archiveInternalName" >&2
 tar --extract --gunzip --file "${archive_name}" --strip-components 2 --directory "${execution_directory}" "${archiveInternalName}bin/"
 
 if [[ -n "${service_directory}" ]]; then
