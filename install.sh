@@ -70,6 +70,7 @@ function usageText {
   echo '                             curl-authenticated - use curl authenticated with the token from the --token option'
   echo '                             curl - use curl without token - needs jq to parse rest response'
   echo '                             archive=<archive> - use tar archive as release'
+  echo '-v/--release-version         Specify explicit release version (uses latest version by default)'
   echo "-s/--service-directory[$service_directory]"
   echo '                             directory for service files'
   echo "-c/--configuration-directory[$configuration_directory]"
@@ -92,6 +93,7 @@ function usage {
 }
 
 authorization_token=''
+release_version=''
 release_fetch_mode_set='false'
 
 while [[ $# -gt 0 ]]; do
@@ -122,6 +124,14 @@ while [[ $# -gt 0 ]]; do
       shift
     else
       usage 'the --directory option needs an argument'
+    fi
+  ;;
+  -v|--release-version)
+    if [ "$value" ]; then
+      release_version="$value"
+      shift
+    else
+      usage 'the --release-version option needs an argument'
     fi
   ;;
   -r|--release-fetch-mode)
@@ -207,6 +217,10 @@ if [ "${release_fetch_mode}" == 'curl-authenticated' ] && [ "${authorization_tok
   usage "'--release-fetch-mode' with option 'curl-authenticated' needs also '--token' to be specified"
 fi
 
+if [ "${release_fetch_mode}" == 'archive' ] && [ "${release-version}" != '' ]; then
+  usage "'--release-fetch-mode' with option 'archive' doesn't support a specific release version (--release-version option)"
+fi
+
 if [ "${release_fetch_mode}" == 'unknown' ]; then
   usage "please specify '--release-fetch-mode' as no default option was found"
 fi
@@ -254,13 +268,24 @@ fi
 
 github_args=(--location ${authorization_args[@]+"${authorization_args[@]}"} --header 'X-GitHub-Api-Version: 2022-11-28')
 
-# shellcheck disable=SC2016
-query='query ($user: String!, $repo: String!) { repository(owner: $user, name: $repo) { latestRelease { releaseAssets(first: 10) { nodes { contentType url } } } } }'
+if [ -z "$release_version" ]; then
+  release_rest_path='latest'
+  # shellcheck disable=SC2016
+  query='query ($user: String!, $repo: String!) { repository(owner: $user, name: $repo) { latestRelease { releaseAssets(first: 10) { nodes { contentType url } } } } }'
+else
+  release_rest_path="tags/$release_version"
+  # shellcheck disable=SC2016
+  query='query ($user: String!, $repo: String!, $release: String!) { repository(owner: $user, name: $repo) { release(tagName: $release) { releaseAssets(first: 10) { nodes { contentType url } } } } }'
+fi
 
 function extractUrlFromGraphqlQuery() {
   local response=$1
   if [[ -n $(command -v jq || echo '') ]]; then
-    jq --raw-output '.data.repository.latestRelease.releaseAssets.nodes | map(select(.contentType == "application/gzip"))[0].url' <<< "$response"
+    if [ -z "$release_version" ]; then
+      jq --raw-output '.data.repository.latestRelease.releaseAssets.nodes | map(select(.contentType == "application/gzip"))[0].url' <<< "$response"
+    else
+      jq --raw-output '.data.repository.release.releaseAssets.nodes | map(select(.contentType == "application/gzip"))[0].url' <<< "$response"
+    fi
   else
     local response_tmp="${response#*\"contentType\":\"application\/gzip\",\"url\":\"}"
     echo "${response_tmp%%\"*}"
@@ -281,7 +306,7 @@ archive)
   ;;
 gh)
   echo 'download latest release data via gh commandline tool' >&2
-  response="$(gh api graphql -F 'user=EdwarDDay' -F 'repo=kotlin-server-scripts' -f "query=$query")"
+  response="$(gh api graphql -F 'user=EdwarDDay' -F 'repo=kotlin-server-scripts' -F "release=$release_version" -f "query=$query")"
   url="$(extractUrlFromGraphqlQuery "$response")"
   downloadBinary
   ;;
@@ -291,7 +316,8 @@ curl-authenticated)
   \"query\":\"$query\",
   \"variables\":{
     \"user\":\"EdwarDDay\",
-    \"repo\":\"kotlin-server-scripts\"
+    \"repo\":\"kotlin-server-scripts\",
+    \"release\":\"$release_version\"
   }
   }"
   response="$(curl --request POST "${github_args[@]}" --fail --silent --url 'https://api.github.com/graphql' --data "$data")"
@@ -301,7 +327,7 @@ curl-authenticated)
 # curl
 *)
   echo 'download latest release data via github rest endpoint and jq' >&2
-  url="$(curl --request GET "${github_args[@]}" --fail --silent --url 'https://api.github.com/repos/EdwarDDay/kotlin-server-scripts/releases/latest' | jq --raw-output '.assets | map(select(.content_type == "application/gzip"))[0].url')"
+  url="$(curl --request GET "${github_args[@]}" --fail --silent --url "https://api.github.com/repos/EdwarDDay/kotlin-server-scripts/releases/$release_rest_path" | jq --raw-output '.assets | map(select(.content_type == "application/gzip"))[0].url')"
   downloadBinary
 esac
 

@@ -10,19 +10,20 @@
 - option to install via release archive file
 - option to set local maven repository settings
 - version and help command line option
+- option to specify install version explicitly 
 
 ### Changed
 
 - updated various dependencies
 - default user for macos set to _www
 
-## [0.4.0]
+## [0.4.0] - 2024-08-25
 
 ### Added
 
 - MacOS option in install script
 
-## [0.3.0]
+## [0.3.0] - 2024-08-18
 
 ### Added
 

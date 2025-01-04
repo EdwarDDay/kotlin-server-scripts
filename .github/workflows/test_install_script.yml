@@ -12,6 +12,16 @@ jobs:
         runner:
           - ubuntu-24.04
           - macos-14
+        version:
+          - '0.2.0'
+          - '0.3.0'
+          - '0.4.0'
+          - ''
+        exclude:
+          - runner: macos-14
+            version: 0.2.0
+          - runner: macos-14
+            version: 0.3.0
     runs-on: ${{ matrix.runner }}
     steps:
       - name: checkout
@@ -24,7 +34,14 @@ jobs:
           java-version: 17
 
       - name: install latest version
+        if: ${{ matrix.version == '' }}
         run: sudo --preserve-env ./install.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: install specific version
+        if: ${{ matrix.version != '' }}
+        run: sudo --preserve-env ./install.sh --release-version ${{ matrix.version }}
         env:
           GH_TOKEN: ${{ github.token }}
 
