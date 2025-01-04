@@ -55,7 +55,9 @@ jobs:
           name: release-artifact
 
       - name: Untar release artifact
-        run: tar --extract --gunzip --file scripting-host-release.tar.gz
+        run: |
+          mkdir scripting-host-release
+          tar --extract --gunzip --directory scripting-host-release --strip-components 1 --file scripting-host-release.tar.gz
 
       - name: Test version output
         timeout-minutes: 1
