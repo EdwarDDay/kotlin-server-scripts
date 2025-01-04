@@ -47,7 +47,7 @@ jobs:
           body: "${{ steps.changelog.outputs.changes }}"
           fail_on_unmatched_files: true
           files: |
-            scripting-host/build/distributions/scripting-host-release.tar.gz
-            scripting-host/build/distributions/scripting-host-release.zip
+            scripting-host/build/distributions/scripting-host-release*.tar.gz
+            scripting-host/build/distributions/scripting-host-release*.zip
           draft: false
           prerelease: false

@@ -255,16 +255,16 @@ fi
 github_args=(--location ${authorization_args[@]+"${authorization_args[@]}"} --header 'X-GitHub-Api-Version: 2022-11-28')
 
 # shellcheck disable=SC2016
-query='query ($user: String!, $repo: String!, $asset: String!) { repository(owner: $user, name: $repo) { latestRelease { releaseAssets(name: $asset, first: 1) { nodes { url } } } } }'
+query='query ($user: String!, $repo: String!) { repository(owner: $user, name: $repo) { latestRelease { releaseAssets(first: 10) { nodes { contentType url } } } } }'
 
 function extractUrlFromGraphqlQuery() {
-    local response=$1
-    if [[ -n $(command -v jq || echo '') ]]; then
-      jq --raw-output '.data.repository.latestRelease.releaseAssets.nodes[0].url' <<< "$response"
-    else
-      local response_tmp="${response%\"*}"
-      echo "${response_tmp##*\"}"
-    fi
+  local response=$1
+  if [[ -n $(command -v jq || echo '') ]]; then
+    jq --raw-output '.data.repository.latestRelease.releaseAssets.nodes | map(select(.contentType == "application/gzip"))[0].url' <<< "$response"
+  else
+    local response_tmp="${response#*\"contentType\":\"application\/gzip\",\"url\":\"}"
+    echo "${response_tmp%%\"*}"
+  fi
 }
 
 function downloadBinary() {
@@ -281,7 +281,7 @@ archive)
   ;;
 gh)
   echo 'download latest release data via gh commandline tool' >&2
-  response="$(gh api graphql -F 'user=EdwarDDay' -F 'repo=kotlin-server-scripts' -F 'asset=scripting-host-release.tar.gz' -f "query=$query")"
+  response="$(gh api graphql -F 'user=EdwarDDay' -F 'repo=kotlin-server-scripts' -f "query=$query")"
   url="$(extractUrlFromGraphqlQuery "$response")"
   downloadBinary
   ;;
@@ -291,8 +291,7 @@ curl-authenticated)
   \"query\":\"$query\",
   \"variables\":{
     \"user\":\"EdwarDDay\",
-    \"repo\":\"kotlin-server-scripts\",
-    \"asset\":\"scripting-host-release.tar.gz\"
+    \"repo\":\"kotlin-server-scripts\"
   }
   }"
   response="$(curl --request POST "${github_args[@]}" --fail --silent --url 'https://api.github.com/graphql' --data "$data")"
