@@ -22,6 +22,7 @@ plugins {
 }
 
 group = "net.edwardday.serverscript"
+version = findProperty("version") as String
 
 dependencies {
     implementation(libs.kotlin.scripting.common)
@@ -29,6 +30,7 @@ dependencies {
     implementation(libs.kotlin.scripting.jvm.host)
     implementation(project(":scripting-definition")) // the script definition module
 
+    implementation(libs.clikt)
     implementation(libs.okio)
     implementation(libs.kotlinx.coroutines)
     implementation(libs.kotlinx.coroutines.slf4j)
@@ -113,4 +115,20 @@ application {
     mainClass.set("net.edwardday.serverscript.scripthost.MainKt")
     applicationName = "kss"
     executableDir = ""
+}
+
+val processResourceVersionFile by tasks.registering {
+    inputs.property("version", project.version)
+    val outputFile = layout.buildDirectory.file("resources/main/version.properties")
+    outputs.file(outputFile)
+    doLast {
+        val version = requireNotNull(inputs.properties["version"])
+        outputFile.get().asFile.printWriter().use {
+            it.print("version=$version")
+        }
+    }
+}
+
+tasks.processResources {
+    dependsOn(processResourceVersionFile)
 }
