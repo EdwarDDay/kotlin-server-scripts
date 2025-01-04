@@ -217,7 +217,7 @@ if [ "${release_fetch_mode}" == 'curl-authenticated' ] && [ "${authorization_tok
   usage "'--release-fetch-mode' with option 'curl-authenticated' needs also '--token' to be specified"
 fi
 
-if [ "${release_fetch_mode}" == 'archive' ] && [ "${release-version}" != '' ]; then
+if [ "${release_fetch_mode}" == 'archive' ] && [ "${release_version}" != '' ]; then
   usage "'--release-fetch-mode' with option 'archive' doesn't support a specific release version (--release-version option)"
 fi
 
