@@ -2,6 +2,8 @@
 
 ## [UNRELEASED]
 
+## [0.5.0] - 2025-01-05
+
 ### Added
 
 - test for `@Repository` annotation
@@ -51,6 +53,8 @@
 ### Added
 
 - Initial Version
+
+[0.5.0]: https://github.com/EdwarDDay/kotlin-server-scripts/releases/tag/0.5.0
 
 [0.4.0]: https://github.com/EdwarDDay/kotlin-server-scripts/releases/tag/0.4.0
 
