@@ -31,6 +31,8 @@ private const val CONFIG_FILE_NAME = "kss.properties"
 suspend fun main(args: Array<String>) = Main().main(args)
 
 private class Main : SuspendingCliktCommand() {
+    val version by option("-v", "--version", help = "Print current version").flag()
+
     private fun readPropertiesFromClasspath(fileName: String): Properties? {
         return Thread.currentThread()
             .getContextClassLoader()
@@ -41,6 +43,7 @@ private class Main : SuspendingCliktCommand() {
                 }
             }
     }
+
     private fun loadProperties(): Properties {
         // load default config
         val defaultConfig = try {
@@ -65,14 +68,14 @@ private class Main : SuspendingCliktCommand() {
         }
         return commandLineConfig
     }
-    val version by option("-v", "--version", help = "Print current version").flag()
 
     override suspend fun run() {
+        val appVersion = kotlin.runCatching {
+            readPropertiesFromClasspath("version.properties")?.getProperty("version")
+        }.getOrElse { "<unknown>" }
         if (version) {
-            val appVersion = kotlin.runCatching {
-                readPropertiesFromClasspath("version.properties")
-            }.getOrNull()?.getProperty("version") ?: "<unknown>"
             echo("Version: $appVersion")
+            echo("Java version: ${Runtime.version()}")
             return
         }
         val properties = loadProperties()
@@ -84,6 +87,8 @@ private class Main : SuspendingCliktCommand() {
 
         val logger = KotlinLogging.logger {}
 
+        logger.info { "Version: $appVersion" }
+        logger.info { ("Java version: ${Runtime.version()}") }
 
         val mavenDependenciesSettings = properties.getProperty("dependencies.maven.settingsFile").orEmpty()
         val mavenDependenciesHome = properties.getProperty("dependencies.maven.homeDirectory").orEmpty()

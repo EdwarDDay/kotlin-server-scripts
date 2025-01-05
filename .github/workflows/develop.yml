@@ -63,7 +63,7 @@ jobs:
         timeout-minutes: 1
         run: |
           version="$(cat gradle.properties | sed -n 's/version=//p')"
-          hostVersion=$(./scripting-host-release/bin/kss --version)
+          hostVersion=$(./scripting-host-release/bin/kss --version | grep "Version: ")
           if [ "$hostVersion" != "Version: $version" ]; then
             echo "host version ($hostVersion) doesn't match gradle properties version ($version)"
             exit 1
