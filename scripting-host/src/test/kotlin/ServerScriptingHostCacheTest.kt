@@ -27,8 +27,8 @@ class ServerScriptingHostCacheTest {
         val (url, response) = readResource("cache_data")
 
         val urls = List(5) { url }
-        val actualResponses = executeWithUds {
-            executeScripts(it, urls)
+        val actualResponses = executeWithUnixDomainSockets {
+            executeScripts(it, urls, 0)
         }
 
         repeat(5) { index ->

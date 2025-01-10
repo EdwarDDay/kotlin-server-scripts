@@ -22,7 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.joinAll
@@ -119,15 +118,13 @@ private suspend fun handleRequests(
                 logger.trace { "read message" }
                 val message = runInterruptible(Dispatchers.IO) { FCGIRequestMessage.read(source) }
                 val result = connectionState.handleMessage(message)
-                val close = result.fold(false) { close, responseMessage ->
+                var close = false
+                result.collect { responseMessage ->
                     when (responseMessage) {
-                        is GlobalState.HandleResult.CloseConnection -> true
-                        is GlobalState.HandleResult.Message -> {
-                            runInterruptible {
-                                responseMessage.message.write(sink)
-                                sink.flush()
-                            }
-                            close
+                        is GlobalState.HandleResult.CloseConnection -> close = true
+                        is GlobalState.HandleResult.Message -> runInterruptible {
+                            responseMessage.message.write(sink)
+                            sink.flush()
                         }
                     }
                 }
