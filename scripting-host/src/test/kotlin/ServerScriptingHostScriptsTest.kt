@@ -27,21 +27,29 @@ class ServerScriptingHostScriptsTest(private val testCaseName: String) {
 
     @Test
     fun testScript() = runTest {
-        val (url, expected) = readResource(testCaseName)
+        val testData = readResource(testCaseName)
 
-        val actual = executeWithUds { executeScript(it, url) }
+        val actual = executeWithUnixDomainSockets { executeScript(it, testData.url, testData.status) }
 
-        assertEquals(expected, actual)
+        assertEquals(testData.body, actual)
     }
-
 
     companion object {
 
         @JvmStatic
         @Parameterized.Parameters(name = "script:{0}")
         fun data() = listOf(
-            "simple_script", "custom_headers", "known_status", "unknown_status",
-            "big_output", "dependency", "dependency_repository", "multiple_output",
+            "big_output",
+            "custom_headers",
+            "dependency",
+            "dependency_repository",
+            "empty",
+            "exception",
+            "invalid",
+            "known_status",
+            "multiple_output",
+            "simple_script",
+            "unknown_status",
         )
     }
 }

@@ -36,13 +36,15 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-fun readResource(resourceName: String): Pair<String, List<String>> {
+fun readResource(resourceName: String): TestData {
     val contextClassLoader = Thread.currentThread().contextClassLoader
     val scriptUrl = contextClassLoader.getResource("$resourceName.server.kts")!!.file
-    val body = contextClassLoader.getResourceAsStream("$resourceName.body")!!.bufferedReader()
-        .use(BufferedReader::readText)
-    val header = contextClassLoader.getResourceAsStream("$resourceName.header")?.bufferedReader()
-        ?.use(BufferedReader::readText)
+    fun readFileText(suffix: String): String? = contextClassLoader.getResourceAsStream("$resourceName.$suffix")
+        ?.bufferedReader()?.use(BufferedReader::readText)
+
+    val body = readFileText("body")!!
+    val header = readFileText("header")
+    val status = readFileText("status")?.toInt() ?: 0
     val content = buildString {
         if (header != null) {
             append(header)
@@ -51,11 +53,21 @@ fun readResource(resourceName: String): Pair<String, List<String>> {
         append('\n')
         append(body)
     }
-    return scriptUrl to content.lines()
+    return TestData(
+        url = scriptUrl,
+        body = content.lines(),
+        status = status,
+    )
 }
 
+data class TestData(
+    val url: String,
+    val body: List<String>,
+    val status: Int,
+)
+
 @OptIn(ExperimentalPathApi::class)
-suspend fun <T> executeWithUds(block: suspend CoroutineScope.(SocketChannel) -> T): T {
+suspend fun <T> executeWithUnixDomainSockets(block: suspend CoroutineScope.(SocketChannel) -> T): T {
     return coroutineScope {
         val directory = Files.createTempDirectory("sockets")
         val socket = directory.absolutePathString().let { if (it.endsWith('/')) it else "$it/" } + "fastcgi.socket"
@@ -75,6 +87,7 @@ suspend fun <T> executeWithUds(block: suspend CoroutineScope.(SocketChannel) -> 
 suspend fun executeScripts(
     channel: SocketChannel,
     urls: List<String>,
+    expectedStatus: Int,
 ): List<List<String>> {
     val result = urls.mapIndexed { index, url ->
         val keepConnection: Byte = if (index < urls.lastIndex) 1 else 0
@@ -161,7 +174,7 @@ suspend fun executeScripts(
         assertEquals(8, buffer.getShort()) // content length
         assertEquals(0, buffer.get()) // padding length
         buffer.get() // skipped
-        assertEquals(0, buffer.getInt()) // app status
+        assertEquals(expectedStatus, buffer.getInt()) // app status
         assertEquals(0, buffer.get()) // protocol status RequestComplete
         repeat(3) { buffer.get() } // skip
 
@@ -174,5 +187,5 @@ suspend fun executeScripts(
     return result
 }
 
-suspend fun executeScript(channel: SocketChannel, url: String): List<String> =
-    executeScripts(channel, listOf(url)).single()
+suspend fun executeScript(channel: SocketChannel, url: String, expectedStatus: Int): List<String> =
+    executeScripts(channel, listOf(url), expectedStatus).single()

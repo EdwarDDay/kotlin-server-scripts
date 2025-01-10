@@ -2,6 +2,10 @@
 
 ## [UNRELEASED]
 
+### Added
+
+- script exception handling
+
 ## [0.5.0] - 2025-01-05
 
 ### Added

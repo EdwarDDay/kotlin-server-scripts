@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEmpty
 import net.edwardday.serverscript.scriptdefinition.ServerScriptDefinition
 import net.edwardday.serverscript.scriptdefinition.script.Cache
@@ -34,7 +33,9 @@ import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.script.experimental.api.ResultValue
 import kotlin.script.experimental.api.ResultWithDiagnostics
+import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.api.SourceCode
 import kotlin.script.experimental.api.implicitReceivers
 import kotlin.script.experimental.host.toScriptSource
@@ -184,18 +185,8 @@ class RequestState(
                 val scriptCache = cache.getOrSet<Cache>(scriptSource, ::CacheImpl)
                 logger.debug { "execute script $scriptFile" }
                 executeScript(scriptSource, FileSystem.SYSTEM.canonicalize(scriptFile).parent!!, scriptCache)
-                    .onCompletion { throwable ->
-                        if (throwable == null) {
-                            emit(
-                                FCGIRecord.EndRequest(
-                                    appStatus = 0, // TODO check app status
-                                    protocolStatus = FCGIRecord.EndRequest.ProtocolStatus.RequestComplete
-                                )
-                            )
-                        }
-                    }
             } else {
-                flowOf(FCGIRecord.EndRequest(400, FCGIRecord.EndRequest.ProtocolStatus.RequestComplete))
+                flowOf(FCGIRecord.EndRequest(3, FCGIRecord.EndRequest.ProtocolStatus.RequestComplete))
             }
         } else {
             logger.trace {
@@ -245,7 +236,7 @@ class RequestState(
                     wroteError = true
                     do {
                         val out = stdErrorBuffer.readBuffer(stdErrorBuffer.size.coerceAtMost(DEFAULT_MAX_RECORD_SIZE))
-                        trySendBlocking(FCGIRecord.Stdout(out))
+                        trySendBlocking(FCGIRecord.Stderr(out))
                     } while (!stdErrorBuffer.exhausted())
                 }
             }
@@ -263,9 +254,41 @@ class RequestState(
                     )
                 },
             )
-            when (result) {
-                is ResultWithDiagnostics.Success -> logger.debug { "script execution successful" }
-                is ResultWithDiagnostics.Failure -> logger.error { "script execution failed with result: $result" }
+            val appStatus: Int = when (result) {
+                is ResultWithDiagnostics.Success -> when (val returnValue = result.value.returnValue) {
+                    is ResultValue.Error -> {
+                        logger.error(returnValue.error) {
+                            "script execution threw error (wrapping exception ${returnValue.wrappingException})"
+                        }
+                        1
+                    }
+
+                    ResultValue.NotEvaluated -> {
+                        logger.error { "script execution wasn't evaluated" }
+                        error("scripts should always get evaluated")
+                    }
+
+                    is ResultValue.Unit,
+                    is ResultValue.Value,
+                        -> {
+                        logger.debug { "script execution successful" }
+                        0
+                    }
+                }
+
+                is ResultWithDiagnostics.Failure -> {
+                    val exception = result.reports.firstNotNullOfOrNull(ScriptDiagnostic::exception)
+                    logger.error(exception) { "script compilation failed with result: $result" }
+                    2
+                }
+            }
+            // if nothing emitted yet
+            if (haveToWriteHeaders.get()) {
+                if (appStatus != 0) {
+                    send(FCGIRecord.Stdout(Buffer().writeUtf8("Status:500 Internal Server Error\n\n")))
+                } else {
+                    send(FCGIRecord.Stdout(Buffer().writeUtf8("\n")))
+                }
             }
             // empty as end marker
             send(FCGIRecord.Stdout(Buffer()))
@@ -273,6 +296,12 @@ class RequestState(
                 // empty as end marker
                 send(FCGIRecord.Stderr(Buffer()))
             }
+            send(
+                FCGIRecord.EndRequest(
+                    appStatus = appStatus,
+                    protocolStatus = FCGIRecord.EndRequest.ProtocolStatus.RequestComplete,
+                )
+            )
             close()
         }.flowOn(Dispatchers.IO)
     }
