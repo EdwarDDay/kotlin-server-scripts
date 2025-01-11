@@ -42,7 +42,7 @@ fun readResource(resourceName: String): TestData {
     fun readFileText(suffix: String): String? = contextClassLoader.getResourceAsStream("$resourceName.$suffix")
         ?.bufferedReader()?.use(BufferedReader::readText)
 
-    val body = readFileText("body")!!
+    val body = readFileText("body")
     val header = readFileText("header")
     val status = readFileText("status")?.toInt() ?: 0
     val content = buildString {
@@ -51,7 +51,9 @@ fun readResource(resourceName: String): TestData {
             append('\n')
         }
         append('\n')
-        append(body)
+        if (body != null) {
+            append(body)
+        }
     }
     return TestData(
         url = scriptUrl,
@@ -60,7 +62,7 @@ fun readResource(resourceName: String): TestData {
     )
 }
 
-data class TestData(
+class TestData(
     val url: String,
     val body: List<String>,
     val status: Int,
@@ -86,11 +88,10 @@ suspend fun <T> executeWithUnixDomainSockets(block: suspend CoroutineScope.(Sock
 
 suspend fun executeScripts(
     channel: SocketChannel,
-    urls: List<String>,
-    expectedStatus: Int,
+    testData: List<TestData>,
 ): List<List<String>> {
-    val result = urls.mapIndexed { index, url ->
-        val keepConnection: Byte = if (index < urls.lastIndex) 1 else 0
+    val result = testData.mapIndexed { index, testDate ->
+        val keepConnection: Byte = if (index < testData.lastIndex) 1 else 0
         val buffer = ByteBuffer.allocate(8192)
         fun putMessageInBuffer(
             type: Byte,
@@ -118,7 +119,7 @@ suspend fun executeScripts(
         // params
         putMessageInBuffer(
             type = 4,
-            content = listOf(KeyValuePair("SCRIPT_FILENAME", url)).toBuffer().readByteArray(),
+            content = listOf(KeyValuePair("SCRIPT_FILENAME", testDate.url)).toBuffer().readByteArray(),
         )
 
         // params end
@@ -174,7 +175,7 @@ suspend fun executeScripts(
         assertEquals(8, buffer.getShort()) // content length
         assertEquals(0, buffer.get()) // padding length
         buffer.get() // skipped
-        assertEquals(expectedStatus, buffer.getInt()) // app status
+        assertEquals(testDate.status, buffer.getInt()) // app status
         assertEquals(0, buffer.get()) // protocol status RequestComplete
         repeat(3) { buffer.get() } // skip
 
@@ -187,5 +188,5 @@ suspend fun executeScripts(
     return result
 }
 
-suspend fun executeScript(channel: SocketChannel, url: String, expectedStatus: Int): List<String> =
-    executeScripts(channel, listOf(url), expectedStatus).single()
+suspend fun executeScript(channel: SocketChannel, testData: TestData): List<String> =
+    executeScripts(channel, listOf(testData)).single()

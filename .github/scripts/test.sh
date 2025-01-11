@@ -21,16 +21,19 @@ set -o pipefail
 
 html_dir="$1"
 
+cp -R scripting-host/src/test/resources/imports "$html_dir"
+
 for file in scripting-host/src/test/resources/*.server.kts; do
   cp "$file" "$html_dir"
   test_file_name=$(basename "$file")
   test_name="${test_file_name%%.server.kts}"
   expected_body="${file%%.server.kts}.body"
   header_file="${file%%.server.kts}.header"
-  expected_header=''
+  expected_header='expected_header.txt'
   if [ -f "$header_file" ]; then
-      sed 's%Status:%HTTP/1.1 %g' "$header_file" > 'expected_header.txt'
-      expected_header='expected_header.txt'
+    sed 's%Status:%HTTP/1.1 %g' "$header_file" > "$expected_header"
+  else
+    echo "HTTP/1.1 200 OK" > "$expected_header"
   fi
   echo "test $test_name"
 
@@ -40,7 +43,12 @@ for file in scripting-host/src/test/resources/*.server.kts; do
         --url "http://localhost:8080/$test_name.kts" \
         --output 'test_result.txt' \
         --dump-header 'test_headers.txt'
-    diff "$expected" 'test_result.txt'
+    if [ -f "$expected" ]; then
+      diff "$expected" 'test_result.txt'
+    elif [ -s 'test_result.txt' ]; then
+        echo 'expected empty body but got'
+        cat 'test_result.txt'
+    fi
     if [[ -n "$expected_header" ]]; then
         missing_lines=$(diff --ignore-all-space -U 0 expected_header.txt test_headers.txt | tail -n +3 | grep -c '^-' || true)
         if [ "$missing_lines" -gt 0 ]; then

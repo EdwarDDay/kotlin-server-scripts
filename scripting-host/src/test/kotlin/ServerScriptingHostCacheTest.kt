@@ -23,21 +23,35 @@ import kotlin.test.assertEquals
 class ServerScriptingHostCacheTest {
 
     @Test
-    fun testCacheWithUds() = runTest {
-        val (url, response) = readResource("cache_data")
+    fun testCacheWithUnixDomainSockets() = runTest {
+        val testData = readResource("cache_data")
 
-        val urls = List(5) { url }
+        val urls = List(5) { testData }
         val actualResponses = executeWithUnixDomainSockets {
-            executeScripts(it, urls, 0)
+            executeScripts(it, urls)
         }
 
         repeat(5) { index ->
             val counter = index + 1
-            val expected = response.map { it.replace("{counter}", "$counter") }
+            val expected = testData.body.map { it.replace("{counter}", "$counter") }
 
             val actual = actualResponses[index]
 
             assertEquals(expected, actual)
         }
+    }
+
+    @Test
+    fun testSharedCacheWithUnixDomainSockets() = runTest {
+        val testData1 = readResource("cache_import_script_1")
+        val testData2 = readResource("cache_import_script_2")
+
+        val urls = listOf(testData1, testData2)
+        val actualResponses = executeWithUnixDomainSockets {
+            executeScripts(it, urls)
+        }
+
+        assertEquals(testData1.body, actualResponses[0])
+        assertEquals(testData2.body, actualResponses[1])
     }
 }
