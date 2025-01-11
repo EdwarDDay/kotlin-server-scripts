@@ -36,8 +36,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.script.experimental.api.ResultValue
 import kotlin.script.experimental.api.ResultWithDiagnostics
 import kotlin.script.experimental.api.ScriptDiagnostic
+import kotlin.script.experimental.api.ScriptEvaluationConfiguration
 import kotlin.script.experimental.api.SourceCode
+import kotlin.script.experimental.api.asSuccess
 import kotlin.script.experimental.api.implicitReceivers
+import kotlin.script.experimental.api.refineConfigurationBeforeEvaluate
 import kotlin.script.experimental.host.toScriptSource
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 import java.nio.file.Path as NioPath
@@ -182,9 +185,8 @@ class RequestState(
             val scriptFile: Path? = params!!.findScriptPath()
             if (scriptFile != null) {
                 val scriptSource = scriptFile.toFile().toScriptSource()
-                val scriptCache = cache.getOrSet<Cache>(scriptSource, ::CacheImpl)
                 logger.debug { "execute script $scriptFile" }
-                executeScript(scriptSource, FileSystem.SYSTEM.canonicalize(scriptFile).parent!!, scriptCache)
+                executeScript(scriptSource, FileSystem.SYSTEM.canonicalize(scriptFile).parent!!)
             } else {
                 flowOf(FCGIRecord.EndRequest(3, FCGIRecord.EndRequest.ProtocolStatus.RequestComplete))
             }
@@ -204,7 +206,6 @@ class RequestState(
     private fun executeScript(
         scriptSource: SourceCode,
         workingDirectory: Path,
-        scriptCache: Cache,
     ): Flow<FCGIRecord.FCGIResponseRecord> {
         return callbackFlow {
             val haveToWriteHeaders = AtomicBoolean(true)
@@ -244,14 +245,19 @@ class RequestState(
             val result = BasicJvmScriptingHost().evalWithTemplate<ServerScriptDefinition>(
                 script = scriptSource,
                 evaluation = {
-                    implicitReceivers(
-                        ServerScriptImpl(
-                            cache = scriptCache,
-                            workingDirectory = workingDirectory,
-                            writeOutput = ::writeOutput,
-                            writeError = ::writeError,
-                        )
-                    )
+                    refineConfigurationBeforeEvaluate { context ->
+                        val sourceLocationId = context.compiledScript.sourceLocationId
+                        ScriptEvaluationConfiguration(context.evaluationConfiguration) {
+                            implicitReceivers(
+                                ServerScriptImpl(
+                                    cache = cache.getOrSet(sourceLocationId, ::CacheImpl),
+                                    workingDirectory = workingDirectory,
+                                    writeOutput = ::writeOutput,
+                                    writeError = ::writeError,
+                                )
+                            )
+                        }.asSuccess()
+                    }
                 },
             )
             val appStatus: Int = when (result) {

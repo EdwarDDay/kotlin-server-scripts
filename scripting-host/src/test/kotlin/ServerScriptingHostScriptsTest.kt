@@ -29,7 +29,7 @@ class ServerScriptingHostScriptsTest(private val testCaseName: String) {
     fun testScript() = runTest {
         val testData = readResource(testCaseName)
 
-        val actual = executeWithUnixDomainSockets { executeScript(it, testData.url, testData.status) }
+        val actual = executeWithUnixDomainSockets { executeScript(it, testData) }
 
         assertEquals(testData.body, actual)
     }
@@ -45,6 +45,10 @@ class ServerScriptingHostScriptsTest(private val testCaseName: String) {
             "dependency_repository",
             "empty",
             "exception",
+            "import_function",
+            "import_invalid",
+            "import_not_existent",
+            "import_script",
             "invalid",
             "known_status",
             "multiple_output",

@@ -196,6 +196,7 @@ jobs:
           sudo chown '${{ steps.runner_config.outputs.user }}' '${{ steps.runner_config.outputs.config_dir }}.m2'
           sudo mv kss.properties '${{ steps.runner_config.outputs.config_dir }}'
           sudo ${{ steps.runner_config.outputs.start_cmd }}
+          sleep 2
 
       - name: Start nginx
         uses: nyurik/action-setup-nginx@v1.1

@@ -5,6 +5,7 @@
 ### Added
 
 - script exception handling
+- add option to import other scripts via `@Import` annotation
 
 ## [0.5.0] - 2025-01-05
 
