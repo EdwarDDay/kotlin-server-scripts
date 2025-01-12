@@ -4,7 +4,8 @@
     "config:recommended"
   ],
   "kotlin-script": {
-    "fileMatch": ["^.+\\.server\\.kts$"]
+    "fileMatch": ["^.+\\.server\\.kts$"],
+    "ignorePaths": []
   },
   "labels": ["dependencies"]
 }
