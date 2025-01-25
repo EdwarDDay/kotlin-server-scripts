@@ -334,9 +334,7 @@ esac
 echo 'extract binary' >&2
 
 if [ -d "${execution_directory}kss_lib/" ]; then
-  # TODO remove ls again
-  ls -lisa "${execution_directory}kss_lib/"
-  rm "${execution_directory}kss_lib/*.jar"
+  rm "${execution_directory}kss_lib/"*.jar
 fi
 archiveInternalName="$(tar --list --file "${archive_name}" --exclude="*/?*")"
 tar --extract --gunzip --file "${archive_name}" --strip-components 2 --directory "${execution_directory}" "${archiveInternalName}bin/"
