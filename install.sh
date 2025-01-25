@@ -333,6 +333,9 @@ esac
 
 echo 'extract binary' >&2
 
+if [ -d "${execution_directory}kss_lib/" ]; then
+  rm "${execution_directory}kss_lib/*.jar"
+fi
 archiveInternalName="$(tar --list --file "${archive_name}" --exclude="*/?*")"
 tar --extract --gunzip --file "${archive_name}" --strip-components 2 --directory "${execution_directory}" "${archiveInternalName}bin/"
 
@@ -341,31 +344,54 @@ if [[ -n "${service_directory}" ]]; then
   # escape sed escape char
   service_user="${service_user/|/\\\|}"
   tar --extract --gunzip --file "${archive_name}" --to-stdout "${archiveInternalName}service/$service_file" |\
-   sed "s|{{DIRECTORY}}|${execution_directory}|g" | \
-   sed "s|{{WORKING_DIRECTORY}}|${configuration_directory}|g" | \
-   sed "s|{{LOG_DIRECTORY}}|${log_directory}|g" | \
-   sed "s|{{USER}}|${service_user}|g" \
-   > "$service_directory$service_file"
+    sed "s|{{DIRECTORY}}|${execution_directory}|g" | \
+    sed "s|{{WORKING_DIRECTORY}}|${configuration_directory}|g" | \
+    sed "s|{{LOG_DIRECTORY}}|${log_directory}|g" | \
+    sed "s|{{USER}}|${service_user}|g" \
+    > "$service_file"
   case $service_binary in
   systemctl)
-    systemctl enable kss
-    echo 'The system service is enabled. Run'
-    echo ''
-    echo 'systemctl start kss'
-    echo ''
-    echo 'to start the service'
+    if [ ! -f "$service_directory$service_file" ]; then
+      mv "$service_file" "$service_directory$service_file"
+      systemctl enable kss
+      echo 'The system service is enabled. Run'
+      echo ''
+      echo 'systemctl start kss'
+      echo ''
+      echo 'to start the service'
+    elif diff --brief "$service_file" "$service_directory$service_file" > /dev/null; then
+      rm "$service_file"
+      echo 'Restart system service'
+      systemctl restart kss
+    else
+      mv "$service_file" "$service_directory$service_file"
+      echo 'Restart system service'
+      systemctl daemon-reload
+      systemctl restart kss
+    fi
     ;;
   launchctl)
-    sudo touch "${log_directory}kss.log"
-    sudo touch "${log_directory}kss-error.log"
-    sudo chown "$service_user" "${log_directory}kss.log" "${log_directory}kss-error.log"
-    sudo chmod 600 "$service_directory$service_file"
-    echo 'The launch daemon is enabled. Run'
-    echo ''
-    echo "launchctl load -w $service_directory$service_file"
-    echo ''
-    echo 'to start the daemon'
+    touch "${log_directory}kss.log"
+    touch "${log_directory}kss-error.log"
+    chown "$service_user" "${log_directory}kss.log" "${log_directory}kss-error.log"
+    if [ ! -f "$service_directory$service_file" ]; then
+      mv "$service_file" "$service_directory$service_file"
+      chmod 600 "$service_directory$service_file"
+      echo 'The launch daemon is enabled. Run'
+      echo ''
+      echo "launchctl load -w $service_directory$service_file"
+      echo ''
+      echo 'to start the daemon'
+    else
+      mv "$service_file" "$service_directory$service_file"
+      chmod 600 "$service_directory$service_file"
+      echo 'reloading launch daemon'
+      launchctl unload "$service_directory$service_file"
+      launchctl load -w "$service_directory$service_file"
+    fi
     ;;
+  *)
+    mv "$service_file" "$service_directory$service_file"
   esac
 
   tar --extract --gunzip --file "${archive_name}" --strip-components 2 --directory "${configuration_directory}" "${archiveInternalName}config/"
