@@ -334,6 +334,8 @@ esac
 echo 'extract binary' >&2
 
 if [ -d "${execution_directory}kss_lib/" ]; then
+  # TODO remove ls again
+  ls -lisa "${execution_directory}kss_lib/"
   rm "${execution_directory}kss_lib/*.jar"
 fi
 archiveInternalName="$(tar --list --file "${archive_name}" --exclude="*/?*")"
