@@ -6,6 +6,7 @@
 
 - script exception handling
 - add option to import other scripts via `@Import` annotation
+- upgrade current service via install script
 
 ## [0.5.0] - 2025-01-05
 
@@ -17,7 +18,7 @@
 - option to install via release archive file
 - option to set local maven repository settings
 - version and help command line option
-- option to specify install version explicitly 
+- option to specify install version explicitly
 
 ### Changed
 
