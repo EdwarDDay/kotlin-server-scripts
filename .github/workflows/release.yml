@@ -28,7 +28,7 @@ jobs:
         run: |
           gradleVersion="$(cat gradle.properties | sed -n 's/version=//p')"
           gitVersion="${GITHUB_REF#refs/*/}"
-          if [ "$gradleVersion" != "$gitVersion" ]; then 
+          if [ "$gradleVersion" != "$gitVersion" ]; then
             echo "gradle properties version ($gradleVersion) doesn't match git tag version ($gitVersion)"
             exit 1
           fi
