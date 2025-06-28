@@ -1,5 +1,5 @@
 @file:Repository("https://dl.google.com/dl/android/maven2/")
-@file:DependsOn("androidx.collection:collection:1.4.5")
+@file:DependsOn("androidx.collection:collection:1.5.0")
 
 import androidx.collection.intListOf
 
