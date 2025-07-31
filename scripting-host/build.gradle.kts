@@ -109,6 +109,13 @@ distributions {
 tasks.named<Tar>("releaseDistTar") {
     compression = Compression.GZIP
     archiveExtension.set("tar.gz")
+    eachFile {
+        if (path.endsWith("bin/kss")) {
+            permissions {
+                unix("755")
+            }
+        }
+    }
 }
 
 application {
