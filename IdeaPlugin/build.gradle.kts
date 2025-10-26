@@ -1,5 +1,7 @@
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.tasks.GetChangelogTask
+import org.jetbrains.intellij.platform.gradle.extensions.excludeCoroutines
+import org.jetbrains.intellij.platform.gradle.extensions.excludeKotlinStdlib
 
 /*
  * Copyright 2025 Eduard Wolf
@@ -70,8 +72,6 @@ dependencies {
     // Configure Gradle IntelliJ Plugin
     // Read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html#setup
     intellijPlatform {
-        // needed until 2025.3 can be targeted
-        @Suppress("DEPRECATION")
         intellijIdeaCommunity("2025.2.2")
 
         bundledPlugins("org.jetbrains.kotlin")
@@ -80,15 +80,15 @@ dependencies {
         compileOnly(libs.kotlinx.coroutines)
     }
     implementation(project(":scripting-definition")) {
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+        excludeKotlinStdlib()
+        excludeCoroutines()
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-scripting-common")
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-scripting-jvm")
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-script-runtime")
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-scripting-dependencies-maven")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
     implementation(libs.kotlin.scripting.dependencies.maven.all) {
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+        excludeKotlinStdlib()
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-scripting-common")
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-scripting-jvm")
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-script-runtime")
