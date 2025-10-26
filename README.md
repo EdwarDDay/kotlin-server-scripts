@@ -1,3 +1,5 @@
+![KSS Logo](IdeaPlugin/src/main/resources/META-INF/pluginIcon.svg)
+
 # Kotlin Server Scripts
 
 Kotlin Server Scripts let you run kotlin scripts in response to server requests, without setting up a complete project.
@@ -77,6 +79,16 @@ If you want to execute another `server.kts` script file, you can import it via `
 You can reference a [logback configuration file](https://logback.qos.ch/manual/configuration.html) in the
 `kss.properties` configuration file via `logging.logback.configurationFile=<path to file>`. This way you can change the
 log level from the default `info` or log to a file instead of the command line as it's done by default.
+
+## Plugin
+
+You can use the IntelliJ plugin from the latest release to get proper code completion when writing scripts.
+
+### Install
+
+Download the plugin from the [latest release](https://github.com/EdwarDDay/kotlin-server-scripts/releases/latest),
+check the [IDEA documentation](https://www.jetbrains.com/help/idea/managing-plugins.html#install_plugin_from_disk) to
+get the latest information of how to install a plugin from disk.
 
 ## Building
 

@@ -6,6 +6,7 @@ build/
 
 ### IntelliJ IDEA ###
 .idea/
+.intellijPlatform/
 
 ### Eclipse ###
 .apt_generated
@@ -34,3 +35,6 @@ bin/
 
 ### Project ###
 /kss.properties
+
+### Kotlin ###
+.kotlin

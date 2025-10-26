@@ -14,7 +14,15 @@
  * limitations under the License.
  */
 
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = "KotlinServerScripts"
 
 include("scripting-definition")
 include("scripting-host")
+include("IdeaPlugin")

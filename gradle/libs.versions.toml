@@ -1,5 +1,7 @@
 [versions]
+changelog = "2.2.1"
 clikt = "5.0.3"
+intellij-platform = "2.9.0"
 kotlin = "2.2.21"
 kotlinx-coroutines = "1.10.2"
 logback = "1.5.20"
@@ -11,6 +13,7 @@ clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 kotlin-scripting-common = { module = "org.jetbrains.kotlin:kotlin-scripting-common", version.ref = "kotlin" }
 kotlin-scripting-dependencies = { module = "org.jetbrains.kotlin:kotlin-scripting-dependencies", version.ref = "kotlin" }
 kotlin-scripting-dependencies-maven = { module = "org.jetbrains.kotlin:kotlin-scripting-dependencies-maven", version.ref = "kotlin" }
+kotlin-scripting-dependencies-maven-all = { module = "org.jetbrains.kotlin:kotlin-scripting-dependencies-maven-all", version.ref = "kotlin" }
 kotlin-scripting-jvm = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm", version.ref = "kotlin" }
 kotlin-scripting-jvm-host = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm-host", version.ref = "kotlin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -22,4 +25,6 @@ oshai-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
 [plugins]
+changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+intellij-platform = { id = "org.jetbrains.intellij.platform", version.ref = "intellij-platform" }

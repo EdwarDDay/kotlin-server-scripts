@@ -21,7 +21,7 @@ jobs:
           java-version: 17
 
       - name: Build
-        run: ./gradlew assembleReleaseDist
+        run: ./gradlew scripting-host:assembleReleaseDist IdeaPlugin:buildPlugin
 
       - name: Create info variables
         id: variables
@@ -36,10 +36,10 @@ jobs:
 
       - name: Get Changelog
         id: changelog
-        uses: mindsers/changelog-reader-action@v2.2.3
-        with:
-          version: ${{ steps.variables.outputs.version }}
-          validation_level: error
+        run: |
+          echo 'changes<<END_OF_CHANGELOG' >> $GITHUB_OUTPUT
+          ./gradlew -q getChangelog --project-version='${{ steps.variables.outputs.version }}' --no-links --no-header >> $GITHUB_OUTPUT
+          echo END_OF_CHANGELOG >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -49,5 +49,6 @@ jobs:
           files: |
             scripting-host/build/distributions/scripting-host-release*.tar.gz
             scripting-host/build/distributions/scripting-host-release*.zip
+            IdeaPlugin/build/distributions/IdeaPlugin-*.zip
           draft: false
           prerelease: false

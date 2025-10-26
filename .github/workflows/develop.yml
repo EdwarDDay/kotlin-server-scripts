@@ -25,7 +25,7 @@ jobs:
 
       - name: Build
         run: |
-          ./gradlew build
+          ./gradlew build IdeaPlugin:verifyPlugin
           mv scripting-host/build/distributions/scripting-host-release*.tar.gz scripting-host-release.tar.gz
 
       - name: Upload build
