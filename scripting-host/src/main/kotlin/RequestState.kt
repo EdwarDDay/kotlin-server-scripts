@@ -47,6 +47,8 @@ import java.nio.file.Path as NioPath
 
 private val logger = KotlinLogging.logger {}
 
+private val scriptingHost = BasicJvmScriptingHost()
+
 class RequestState(
     record: FCGIRecord.BeginRequest,
     private val cache: Cache,
@@ -242,7 +244,7 @@ class RequestState(
                 }
             }
 
-            val result = BasicJvmScriptingHost().evalWithTemplate<ServerScriptDefinition>(
+            val result = scriptingHost.evalWithTemplate<ServerScriptDefinition>(
                 script = scriptSource,
                 evaluation = {
                     refineConfigurationBeforeEvaluate { context ->

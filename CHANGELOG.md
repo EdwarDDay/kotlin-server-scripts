@@ -1,6 +1,10 @@
 # CHANGELOG
 
-## [UNRELEASED]
+## [Unreleased]
+
+### Added
+
+- IntelliJ Plugin
 
 ## [0.6.0] - 2025-01-25
 
