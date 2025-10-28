@@ -18,6 +18,7 @@ import org.gradle.jvm.component.internal.JvmSoftwareComponentInternal
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.burst)
     application
 }
 
