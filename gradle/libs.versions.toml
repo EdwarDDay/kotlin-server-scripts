@@ -2,7 +2,7 @@
 burst = "2.10.2"
 changelog = "2.4.0"
 clikt = "5.0.3"
-intellij-platform = "2.10.2"
+intellij-platform = "2.10.3"
 kotlin = "2.2.21"
 kotlinx-coroutines = "1.10.2"
 logback = "1.5.20"
