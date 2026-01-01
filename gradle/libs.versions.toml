@@ -6,7 +6,7 @@ intellij-platform = "2.10.5"
 kotlin = "2.3.0"
 kotlinx-coroutines = "1.10.2"
 logback = "1.5.23"
-oshai-logging = "7.0.13"
+oshai-logging = "7.0.14"
 okio = "3.16.4"
 
 [libraries]
