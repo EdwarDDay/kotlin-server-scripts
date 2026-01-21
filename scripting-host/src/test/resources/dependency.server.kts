@@ -1,4 +1,4 @@
-@file:DependsOn("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+@file:DependsOn("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
 
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
