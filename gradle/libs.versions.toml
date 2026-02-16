@@ -5,7 +5,7 @@ clikt = "5.1.0"
 intellij-platform = "2.10.5"
 kotlin = "2.3.10"
 kotlinx-coroutines = "1.10.2"
-logback = "1.5.29"
+logback = "1.5.32"
 oshai-logging = "7.0.14"
 okio = "3.16.4"
 
