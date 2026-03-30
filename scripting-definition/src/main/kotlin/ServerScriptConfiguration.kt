@@ -64,6 +64,7 @@ internal class ServerScriptConfiguration : ScriptCompilationConfiguration(
                 ServerScriptDefinition::class,
                 "kotlin-scripting-dependencies",
                 "scripting-definition",
+                "kotlin-stdlib",
             )
         }
         implicitReceivers(ServerScript::class)
