@@ -134,7 +134,7 @@ internal class ServerScriptImportsConfigurator : RefineScriptCompilationConfigur
             ResultWithDiagnostics.Failure(diagnostics)
         } else {
             ScriptCompilationConfiguration(context.compilationConfiguration) {
-                importScripts(scripts)
+                if (scripts.isNotEmpty()) importScripts.append(scripts)
             }.asSuccess()
         }
     }
