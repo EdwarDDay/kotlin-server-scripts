@@ -47,7 +47,9 @@ import java.nio.file.Path as NioPath
 
 private val logger = KotlinLogging.logger {}
 
-private val scriptingHost = BasicJvmScriptingHost()
+// revert back from legacy usage
+// https://youtrack.jetbrains.com/issue/KT-86352/K2-scripting-FirResolvedTypeRef-exception-when-resolving-extension-functions-from-imported-scripts
+private val scriptingHost = BasicJvmScriptingHost.createLegacy()
 
 class RequestState(
     record: FCGIRecord.BeginRequest,

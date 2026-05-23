@@ -64,6 +64,7 @@ internal class ServerScriptConfiguration : ScriptCompilationConfiguration(
                 ServerScriptDefinition::class,
                 "kotlin-scripting-dependencies",
                 "scripting-definition",
+                "kotlin-stdlib",
             )
         }
         implicitReceivers(ServerScript::class)
@@ -133,7 +134,7 @@ internal class ServerScriptImportsConfigurator : RefineScriptCompilationConfigur
             ResultWithDiagnostics.Failure(diagnostics)
         } else {
             ScriptCompilationConfiguration(context.compilationConfiguration) {
-                importScripts(scripts)
+                if (scripts.isNotEmpty()) importScripts.append(scripts)
             }.asSuccess()
         }
     }
