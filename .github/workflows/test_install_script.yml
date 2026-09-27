@@ -33,7 +33,7 @@ jobs:
         uses: actions/setup-java@v6.0.1
         with:
           distribution: 'temurin'
-          java-version: 17
+          java-version: 25
 
       # HOME directory needs to be accessible by _www, so the java executable can be used
       # not needed for linux, because JDK is not put in user directory
